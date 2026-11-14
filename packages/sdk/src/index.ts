@@ -1,4 +1,4 @@
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import {
   Agent,
   type AgentEvent,
@@ -73,7 +73,7 @@ export class Harness {
 
   constructor(private readonly options: HarnessOptions = {}) {
     this.env = options.env ?? process.env;
-    this.cwd = options.cwd ?? process.cwd();
+    this.cwd = resolve(options.cwd ?? process.cwd());
     this.store = new SessionStore({ dataDir: options.dataDir });
     this.registry = options.registry ?? createDefaultProviderRegistry(this.env);
     this.tools = options.tools ?? createDefaultToolRegistry();

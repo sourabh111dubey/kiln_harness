@@ -2,6 +2,7 @@ import type { ToolDefinition } from "@harness/shared";
 import { z } from "zod";
 import {
   assertInsideWorkspace,
+  assertRealInside,
   lineNumbered,
   readTextFile,
   resolveWorkspacePath,
@@ -27,6 +28,7 @@ export const readTool: ToolDefinition<ReadInput> = {
   async execute(input, context) {
     const fullPath = resolveWorkspacePath(context.cwd, input.path);
     assertInsideWorkspace(context.cwd, fullPath);
+    await assertRealInside(context.cwd, fullPath);
 
     const content = await readTextFile(fullPath);
     const lines = content.split("\n");

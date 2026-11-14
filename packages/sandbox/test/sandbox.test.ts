@@ -42,6 +42,7 @@ describe("sandbox adapters", () => {
   it("selects an adapter by platform", () => {
     expect(createSandbox({ workspace: "/tmp/work", platform: "linux" }).id).toBe("bubblewrap");
     expect(createSandbox({ workspace: "/tmp/work", platform: "darwin" }).id).toBe("seatbelt");
-    expect(createSandbox({ workspace: "/tmp/work", platform: "win32" }).id).toBe("docker");
+    expect(createSandbox({ workspace: "/tmp/work", platform: "win32" }).id).toBe("passthrough");
+    expect(createSandbox({ workspace: "/tmp/work", platform: "freebsd" }).id).toBe("docker");
   });
 });

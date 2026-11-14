@@ -255,6 +255,13 @@ export class Agent {
 
     this.updateSession({ status: "running" });
     this.pushMessage({ role: "user", content: input });
+    const received = await this.options.plugins?.messageReceived({
+      sessionID: this.session.id,
+      message: { role: "user", content: input },
+    });
+    if (received) {
+      this.messages[this.messages.length - 1] = received;
+    }
     await emit({ type: "turn.start", prompt: input });
     await this.options.plugins?.sessionStart({
       sessionID: this.session.id,

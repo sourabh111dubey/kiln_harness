@@ -2,6 +2,7 @@ import type { ToolDefinition } from "@harness/shared";
 import { z } from "zod";
 import {
   assertInsideWorkspace,
+  assertRealInside,
   atomicWrite,
   diffText,
   fileExists,
@@ -28,6 +29,7 @@ export const writeTool: ToolDefinition<WriteInput> = {
   async execute(input, context) {
     const fullPath = resolveWorkspacePath(context.cwd, input.path);
     assertInsideWorkspace(context.cwd, fullPath);
+    await assertRealInside(context.cwd, fullPath);
 
     const existed = await fileExists(fullPath);
     let before = "";

@@ -5,6 +5,7 @@ import type { ToolDefinition } from "@harness/shared";
 import { z } from "zod";
 import {
   assertInsideWorkspace,
+  assertRealInside,
   DEFAULT_IGNORE,
   resolveWorkspacePath,
   truncateText,
@@ -65,6 +66,7 @@ export const lsTool: ToolDefinition<LsInput> = {
   async execute(input, context) {
     const root = input.path ? resolveWorkspacePath(context.cwd, input.path) : context.cwd;
     assertInsideWorkspace(context.cwd, root);
+    await assertRealInside(context.cwd, root);
 
     const output: string[] = [];
     await listDirectory(root, root, "", (input.depth ?? 2) + 1, output);

@@ -49,6 +49,7 @@ export function registerRunCommand(program: Command): void {
         verbose: options.verbose === true,
         sessionID: options.session,
         continueSession: options.continue === true,
+        agent: options.agent,
       });
 
       if (options.json === true || options.outputFormat === "json") {

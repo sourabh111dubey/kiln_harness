@@ -1,4 +1,4 @@
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import {
   Agent,
   type AgentEvent,
@@ -39,6 +39,7 @@ export interface RunPromptOptions {
   dataDir?: string;
   sessionID?: string;
   continueSession?: boolean;
+  agent?: string;
   onEvent?: (event: AgentEvent) => void | Promise<void>;
 }
 
@@ -60,7 +61,7 @@ export interface RunPromptResult {
 }
 
 export async function runPrompt(options: RunPromptOptions): Promise<RunPromptResult> {
-  const cwd = options.cwd ?? process.cwd();
+  const cwd = resolve(options.cwd ?? process.cwd());
   const env = options.env ?? process.env;
   const loaded = await loadConfig({ cwd, env });
   const dataDir = options.dataDir ? options.dataDir : resolveDataDir(env);
@@ -109,10 +110,12 @@ export async function runPrompt(options: RunPromptOptions): Promise<RunPromptRes
     });
   }
 
-  const permissionMode = options.permissionMode ?? loaded.config.permissions.default;
+  const sessionCwd = session?.cwd ?? cwd;
+  const permissionMode =
+    options.permissionMode ?? session?.permissions ?? loaded.config.permissions.default;
   const permissions = new PermissionEngine({
     mode: permissionMode,
-    cwd,
+    cwd: sessionCwd,
     rules: loaded.config.permissions.rules,
   });
 
@@ -123,21 +126,21 @@ export async function runPrompt(options: RunPromptOptions): Promise<RunPromptRes
     });
 
   const agent = new Agent({
-    cwd,
+    cwd: sessionCwd,
     provider,
     model: parsed.model,
     tools: options.tools ?? createDefaultToolRegistry(),
     permissions,
     logger,
-    agent: loaded.config.agent,
+    agent: options.agent ?? loaded.config.agent,
     store,
     session,
     audit,
     checkpoints,
     sandbox: loaded.config.sandbox.enabled
-      ? createSandbox({ workspace: cwd, network: loaded.config.sandbox.network })
+      ? createSandbox({ workspace: sessionCwd, network: loaded.config.sandbox.network })
       : undefined,
-    lsp: new LspManager(loaded.config.lsp.servers as Record<string, LspServerConfig>, cwd),
+    lsp: new LspManager(loaded.config.lsp.servers as Record<string, LspServerConfig>, sessionCwd),
   });
 
   const result = await agent.prompt(options.prompt, {

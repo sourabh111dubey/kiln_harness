@@ -93,6 +93,33 @@ describe("openai-compatible provider", () => {
     expect(body.messages[2]).toMatchObject({ role: "tool", tool_call_id: "call_0" });
   });
 
+  it("emits arguments that arrive before the tool name", async () => {
+    stubFetch(
+      sseResponse([
+        'data: {"choices":[{"delta":{"tool_calls":[{"index":0,"function":{"arguments":"{\\"path\\":"}}]}}]}\n\n',
+        'data: {"choices":[{"delta":{"tool_calls":[{"index":0,"id":"call_1","function":{"name":"read"}}]}}]}\n\n',
+        'data: {"choices":[{"delta":{},"finish_reason":"tool_calls"}]}\n\n',
+        "data: [DONE]\n\n",
+      ]),
+    );
+
+    const events = await collect(
+      new OpenAIProvider({
+        id: "openai",
+        apiKey: "test",
+        baseURL: "https://api.openai.com/v1",
+      }).stream(request),
+    );
+
+    expect(events).toContainEqual({ type: "tool-call-start", callID: "call_1", tool: "read" });
+    expect(events).toContainEqual({
+      type: "tool-call-delta",
+      callID: "call_1",
+      argsDelta: '{"path":',
+    });
+    expect(events).toContainEqual({ type: "tool-call-end", callID: "call_1" });
+  });
+
   it("throws a provider error on HTTP failure", async () => {
     stubFetch(new Response("unauthorized", { status: 401 }));
     await expect(

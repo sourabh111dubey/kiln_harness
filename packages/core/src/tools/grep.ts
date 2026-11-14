@@ -4,6 +4,7 @@ import type { ToolDefinition } from "@harness/shared";
 import { z } from "zod";
 import {
   assertInsideWorkspace,
+  assertRealInside,
   isBinary,
   matchesGlob,
   resolveWorkspacePath,
@@ -42,6 +43,7 @@ export const grepTool: ToolDefinition<GrepInput> = {
   async execute(input, context) {
     const root = resolveWorkspacePath(context.cwd, input.path ?? ".");
     assertInsideWorkspace(context.cwd, root);
+    await assertRealInside(context.cwd, root);
 
     let expression: RegExp;
     try {

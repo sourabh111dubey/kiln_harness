@@ -17,7 +17,7 @@
     "clean": "turbo run clean",
     "schema": "tsx scripts/generate-schema.ts",
     "changeset": "changeset",
-    "prepare": "lefthook install || true",
+    "prepare": "lefthook install || exit 0",
     "perf": "tsx scripts/perf.ts",
     "perf:check": "tsx scripts/perf.ts --check"
   },

@@ -1,7 +1,13 @@
 import type { ToolDefinition } from "@harness/shared";
 import { glob } from "tinyglobby";
 import { z } from "zod";
-import { assertInsideWorkspace, GLOB_IGNORE, resolveWorkspacePath, truncateText } from "./common";
+import {
+  assertInsideWorkspace,
+  assertRealInside,
+  GLOB_IGNORE,
+  resolveWorkspacePath,
+  truncateText,
+} from "./common";
 
 const globInput = z.object({
   pattern: z.string().min(1).describe("Glob pattern, for example src/**/*.ts"),
@@ -21,6 +27,7 @@ export const globTool: ToolDefinition<GlobInput> = {
   async execute(input, context) {
     const root = input.path ? resolveWorkspacePath(context.cwd, input.path) : context.cwd;
     assertInsideWorkspace(context.cwd, root);
+    await assertRealInside(context.cwd, root);
 
     const files = await glob(input.pattern, {
       cwd: root,

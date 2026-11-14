@@ -2,8 +2,8 @@
 
 A production-grade, model-agnostic coding agent harness.
 
-> **Status:** P1 complete (sandbox, WebSocket, MCP HTTP, LSP, eval framework). See
-> [plan.md](./plan.md) for the full build specification and milestone status.
+> **Status:** Core + P1 integrations complete. Some planned P1 tools remain (see
+> "Remaining scope" in [plan.md](./plan.md#0-build-status)).
 
 ## Requirements
 

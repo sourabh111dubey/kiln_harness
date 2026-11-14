@@ -43,9 +43,11 @@ semantic versioning.
 
 ### Known limitations
 
-- No OS-level sandbox (bwrap/seatbelt/Docker adapter) in 1.0; bash runs as the
-  current user with permission checks.
-- No WebSocket transport (SSE only).
+- No OS-level sandbox on Windows (passthrough; Docker/WSL2 recommended); Linux
+  and macOS have bubblewrap/sandbox-exec/Docker adapters.
+- Git tools, web tools, `multi_edit`/`apply_patch`, memory/skill tools, and
+  `ask_user` are not implemented yet.
+- WebSocket is a JSON event bridge, not a full binary protocol.
 - No MCP HTTP server (stdio server only) and no MCP OAuth.
 - No plugin hot reload; plugins load at startup.
 - Compaction is heuristic (character-based token estimate), not model-generated.

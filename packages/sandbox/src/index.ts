@@ -84,6 +84,23 @@ export class MacSeatbeltSandbox implements SandboxAdapter {
   }
 }
 
+export class PassthroughSandbox implements SandboxAdapter {
+  readonly id = "passthrough";
+
+  wrap(command: string): SandboxCommand {
+    if (process.platform === "win32") {
+      return {
+        command: process.env.COMSPEC ?? "cmd.exe",
+        args: ["/c", command],
+      };
+    }
+    return {
+      command: process.env.SHELL ?? "/bin/bash",
+      args: ["-c", command],
+    };
+  }
+}
+
 export class DockerSandbox implements SandboxAdapter {
   readonly id = "docker";
 
@@ -119,6 +136,7 @@ export function createSandbox(options: SandboxOptions): SandboxAdapter {
   const platform = options.platform ?? process.platform;
   if (platform === "linux") return new LinuxBubblewrapSandbox(options);
   if (platform === "darwin") return new MacSeatbeltSandbox(options);
+  if (platform === "win32") return new PassthroughSandbox();
   return new DockerSandbox(options);
 }
 

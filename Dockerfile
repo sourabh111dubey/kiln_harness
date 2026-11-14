@@ -1,6 +1,7 @@
 FROM node:24-slim
 
 RUN corepack enable && corepack prepare pnpm@12.18.0 --activate
+RUN apt-get update && apt-get install -y --no-install-recommends bubblewrap && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 

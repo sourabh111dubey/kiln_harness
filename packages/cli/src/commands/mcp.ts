@@ -28,9 +28,12 @@ export function registerMcpCommand(program: Command): void {
   mcp
     .command("serve")
     .description("Expose harness tools over MCP stdio")
-    .action(async () => {
+    .option("--allow-destructive", "Expose mutating tools (requires trust)")
+    .action(async (options: { allowDestructive?: boolean }) => {
       const tools = createDefaultToolRegistry();
       process.stderr.write("harness MCP server ready on stdio\n");
-      await startMcpStdioServer(tools.list());
+      await startMcpStdioServer(tools.list(), {
+        allowDestructive: options.allowDestructive === true,
+      });
     });
 }

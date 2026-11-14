@@ -1,7 +1,7 @@
 import { type ChildProcess, spawn } from "node:child_process";
 import type { ToolDefinition } from "@harness/shared";
 import { z } from "zod";
-import { assertInsideWorkspace, resolveWorkspacePath } from "./common";
+import { assertInsideWorkspace, assertRealInside, resolveWorkspacePath } from "./common";
 
 const bashInput = z.object({
   command: z.string().min(1).describe("Shell command to execute"),
@@ -54,6 +54,7 @@ export const bashTool: ToolDefinition<BashInput> = {
   async execute(input, context) {
     const cwd = input.cwd ? resolveWorkspacePath(context.cwd, input.cwd) : context.cwd;
     assertInsideWorkspace(context.cwd, cwd);
+    await assertRealInside(context.workspaceRoot || context.cwd, cwd);
 
     const shell =
       process.platform === "win32"

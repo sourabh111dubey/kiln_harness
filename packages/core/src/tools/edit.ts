@@ -2,6 +2,7 @@ import type { ToolDefinition } from "@harness/shared";
 import { z } from "zod";
 import {
   assertInsideWorkspace,
+  assertRealInside,
   atomicWrite,
   diffText,
   readTextFile,
@@ -43,19 +44,20 @@ export const editTool: ToolDefinition<EditInput> = {
   async execute(input, context) {
     const fullPath = resolveWorkspacePath(context.cwd, input.path);
     assertInsideWorkspace(context.cwd, fullPath);
+    await assertRealInside(context.cwd, fullPath);
 
     const original = await readTextFile(fullPath);
     let content = original;
-    let occurrences = countOccurrences(content, input.oldString);
+    let oldString = input.oldString;
+    let occurrences = countOccurrences(content, oldString);
 
-    if (occurrences === 0 && input.oldString.includes("\r\n")) {
-      content = content.replace(/\r\n/g, "\n");
-      occurrences = countOccurrences(content, input.oldString);
-    } else if (occurrences === 0 && content.includes("\r\n")) {
-      const normalizedOld = input.oldString.replace(/\r\n/g, "\n");
-      const normalizedCount = countOccurrences(content.replace(/\r\n/g, "\n"), normalizedOld);
+    if (occurrences === 0) {
+      const normalizedContent = content.replace(/\r\n/g, "\n");
+      const normalizedOld = oldString.replace(/\r\n/g, "\n");
+      const normalizedCount = countOccurrences(normalizedContent, normalizedOld);
       if (normalizedCount > 0) {
-        content = content.replace(/\r\n/g, "\n");
+        content = normalizedContent;
+        oldString = normalizedOld;
         occurrences = normalizedCount;
       }
     }
@@ -75,8 +77,8 @@ export const editTool: ToolDefinition<EditInput> = {
     }
 
     const updated = input.replaceAll
-      ? content.split(input.oldString).join(input.newString)
-      : content.replace(input.oldString, input.newString);
+      ? content.split(oldString).join(input.newString)
+      : content.replace(oldString, input.newString);
 
     await context.checkpoint?.(fullPath);
     await atomicWrite(fullPath, updated);

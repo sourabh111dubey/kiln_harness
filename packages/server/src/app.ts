@@ -1,4 +1,4 @@
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import {
   Agent,
   AuditLog,
@@ -105,7 +105,7 @@ const WEB_INDEX = `<!doctype html>
     document.getElementById('send').onclick = async () => {
       const prompt = document.getElementById('prompt').value;
       if (!prompt) return;
-      const session = await fetch('/sessions', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ cwd: location.pathname }) }).then(r => r.json());
+      const session = await fetch('/sessions', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ cwd: '/' }) }).then(r => r.json());
       out.textContent = 'session ' + session.id + '\\n';
       const response = await fetch('/sessions/' + session.id + '/prompt', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ prompt }) });
       const reader = response.body.getReader();
@@ -171,6 +171,18 @@ const OPENAPI = {
     "/sessions/{id}/messages": {
       get: { summary: "List session messages", responses: { "200": { description: "OK" } } },
     },
+    "/mcp/servers": {
+      get: {
+        summary: "List configured and connected MCP servers",
+        responses: { "200": { description: "OK" } },
+      },
+    },
+    "/mcp": {
+      post: {
+        summary: "MCP Streamable HTTP endpoint",
+        responses: { "200": { description: "MCP response" } },
+      },
+    },
     "/sessions/{id}/permissions/{requestID}": {
       post: {
         summary: "Resolve a pending permission request",
@@ -187,7 +199,7 @@ export async function createHarnessApp(options: ServerOptions = {}): Promise<{
   close: () => void;
 }> {
   const env = options.env ?? process.env;
-  const cwd = options.cwd ?? process.cwd();
+  const cwd = resolve(options.cwd ?? process.cwd());
   const logger = options.logger ?? createLogger({ level: env.HARNESS_LOG_LEVEL ?? "info" });
   const loaded = await loadConfig({ cwd, env });
   const store = new SessionStore({ dataDir: options.dataDir });
@@ -211,11 +223,7 @@ export async function createHarnessApp(options: ServerOptions = {}): Promise<{
   const mcpConnections: McpConnection[] = await registerMcpTools(tools, loaded.config.mcp.servers, {
     logger,
   });
-  const sandbox = loaded.config.sandbox.enabled
-    ? createSandbox({ workspace: cwd, network: loaded.config.sandbox.network })
-    : undefined;
   const mcpHttpHandler = await createMcpHttpHandler(tools.list());
-  const lsp = new LspManager(loaded.config.lsp.servers as Record<string, LspServerConfig>, cwd);
   const context: ServerContext = {
     store,
     registry,
@@ -293,6 +301,14 @@ export async function createHarnessApp(options: ServerOptions = {}): Promise<{
       cwd: session.cwd,
       rules: loaded.config.permissions.rules,
     });
+
+    const sandbox = loaded.config.sandbox.enabled
+      ? createSandbox({ workspace: session.cwd, network: loaded.config.sandbox.network })
+      : undefined;
+    const lsp = new LspManager(
+      loaded.config.lsp.servers as Record<string, LspServerConfig>,
+      session.cwd,
+    );
 
     const agent = new Agent({
       cwd: session.cwd,
@@ -385,7 +401,8 @@ export async function createHarnessApp(options: ServerOptions = {}): Promise<{
 
   app.post("/sessions", async (c) => {
     const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
-    const sessionCwd = typeof body.cwd === "string" && body.cwd.length > 0 ? body.cwd : cwd;
+    const sessionCwd =
+      typeof body.cwd === "string" && body.cwd.length > 0 ? resolve(body.cwd) : cwd;
     const model = typeof body.model === "string" ? body.model : defaultModel;
     if (!model) return jsonError("model is required");
     const session = store.create({
@@ -517,7 +534,6 @@ export async function createHarnessApp(options: ServerOptions = {}): Promise<{
       for (const connection of mcpConnections) {
         void connection.close().catch(() => undefined);
       }
-      void lsp.close().catch(() => undefined);
       store.close();
     },
   };

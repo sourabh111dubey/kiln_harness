@@ -49,6 +49,7 @@ export function createProgram(): Command {
         cwd: options.cwd,
         model: options.model,
         permissionMode: options.permissionMode,
+        agent: options.agent,
         initialPrompt: prompt?.join(" ").trim() || undefined,
       });
     } catch (error) {

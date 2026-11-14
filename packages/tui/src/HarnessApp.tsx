@@ -1,4 +1,4 @@
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import {
   Agent,
   type AgentEvent,
@@ -41,6 +41,7 @@ export interface HarnessTuiOptions {
   initialPrompt?: string;
   env?: NodeJS.ProcessEnv;
   dataDir?: string;
+  agent?: string;
   registry?: ProviderRegistry;
   tools?: ToolRegistry;
 }
@@ -72,7 +73,7 @@ function transcriptFromMessages(
 export function HarnessApp(options: HarnessTuiOptions): React.ReactNode {
   const { exit } = useApp();
   const env = options.env ?? process.env;
-  const cwd = options.cwd ?? process.cwd();
+  const cwd = resolve(options.cwd ?? process.cwd());
   const theme = useMemo(() => resolveTheme(env), [env]);
 
   const store = useMemo(() => new SessionStore({ dataDir: options.dataDir }), [options.dataDir]);
@@ -131,31 +132,32 @@ export function HarnessApp(options: HarnessTuiOptions): React.ReactNode {
         return null;
       }
 
+      const agentCwd = existing?.cwd ?? cwd;
       const permissionMode =
         options.permissionMode ?? existing?.permissions ?? config.permissions.default;
       const permissions = new PermissionEngine({
         mode: permissionMode,
-        cwd,
+        cwd: agentCwd,
         rules: config.permissions.rules,
       });
 
       const next = new Agent({
-        cwd,
+        cwd: agentCwd,
         provider,
         model: parsed.model,
         tools: options.tools ?? createDefaultToolRegistry(),
         permissions,
         logger,
-        agent: config.agent,
+        agent: options.agent ?? config.agent,
         store,
         session: existing,
         audit,
         checkpoints,
         askPermission,
         sandbox: config.sandbox.enabled
-          ? createSandbox({ workspace: cwd, network: config.sandbox.network })
+          ? createSandbox({ workspace: agentCwd, network: config.sandbox.network })
           : undefined,
-        lsp: new LspManager(config.lsp.servers as Record<string, LspServerConfig>, cwd),
+        lsp: new LspManager(config.lsp.servers as Record<string, LspServerConfig>, agentCwd),
       });
 
       setAgent(next);
@@ -171,6 +173,7 @@ export function HarnessApp(options: HarnessTuiOptions): React.ReactNode {
       cwd,
       env,
       logger,
+      options.agent,
       options.model,
       options.permissionMode,
       options.tools,

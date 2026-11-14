@@ -1,7 +1,7 @@
 import { type ChildProcessWithoutNullStreams, spawn } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { extname } from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   HarnessError,
   type LspDiagnosticLike,
@@ -38,8 +38,6 @@ function toUri(path: string): string {
 function fromUri(uri: string): string {
   return fileURLToPath(uri);
 }
-
-import { fileURLToPath } from "node:url";
 
 export class LspClient {
   private connection?: MessageConnection;

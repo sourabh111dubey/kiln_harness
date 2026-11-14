@@ -1,6 +1,6 @@
 import type { Dirent } from "node:fs";
-import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
-import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { mkdir, readdir, readFile, realpath, rename, rm, stat, writeFile } from "node:fs/promises";
+import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { HarnessError, type ToolOutput, toHarnessError } from "@harness/shared";
 import { createTwoFilesPatch } from "diff";
 
@@ -50,6 +50,27 @@ export function assertInsideWorkspace(cwd: string, target: string): void {
       details: { cwd, target },
       recoverable: false,
     });
+  }
+}
+
+export async function assertRealInside(cwd: string, target: string): Promise<void> {
+  const realCwd = await realpath(cwd).catch(() => cwd);
+
+  let realTarget: string;
+  try {
+    realTarget = await realpath(target);
+  } catch {
+    const realParent = await realpath(dirname(target)).catch(() => undefined);
+    if (!realParent) return;
+    realTarget = join(realParent, basename(target));
+  }
+
+  if (!isPathInside(realCwd, realTarget)) {
+    throw new HarnessError(
+      "permission_denied",
+      `Path ${target} resolves outside the workspace ${cwd}`,
+      { details: { cwd, target, realTarget }, recoverable: false },
+    );
   }
 }
 

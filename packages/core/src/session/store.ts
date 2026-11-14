@@ -134,7 +134,7 @@ export class SessionStore {
     const session: Session = {
       id: ids.session(),
       title: input.title ?? defaultTitle(input.cwd),
-      cwd: input.cwd,
+      cwd: resolve(input.cwd),
       model: input.model,
       agent: input.agent ?? "build",
       parentID: input.parentID,

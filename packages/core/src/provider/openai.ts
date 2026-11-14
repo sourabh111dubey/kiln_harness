@@ -175,11 +175,20 @@ export class OpenAIProvider implements ProviderAdapter {
         if (!entry.started && entry.id.length > 0 && entry.name.length > 0) {
           entry.started = true;
           yield { type: "tool-call-start", callID: entry.id, tool: entry.name };
+          if (entry.args.length > 0) {
+            yield { type: "tool-call-delta", callID: entry.id, argsDelta: entry.args };
+          }
         }
 
         if (call.function?.arguments) {
           entry.args += call.function.arguments;
-          yield { type: "tool-call-delta", callID: entry.id, argsDelta: call.function.arguments };
+          if (entry.started) {
+            yield {
+              type: "tool-call-delta",
+              callID: entry.id,
+              argsDelta: call.function.arguments,
+            };
+          }
         }
 
         pending.set(index, entry);

@@ -1,5 +1,14 @@
 import type { Hono } from "hono";
-import { type WebSocket, WebSocketServer } from "ws";
+import { WebSocket, WebSocketServer } from "ws";
+
+function safeSend(ws: WebSocket, payload: string): void {
+  if (ws.readyState !== WebSocket.OPEN) return;
+  try {
+    ws.send(payload);
+  } catch {
+    // The client may have disconnected mid-stream.
+  }
+}
 
 interface ClientMessage {
   type: string;
@@ -34,7 +43,7 @@ export function attachWebSocket(
     }
 
     wss.handleUpgrade(request, socket, head, (ws) => {
-      ws.send(JSON.stringify({ type: "hello", transport: "websocket" }));
+      safeSend(ws, JSON.stringify({ type: "hello", transport: "websocket" }));
 
       ws.on("message", (data) => {
         void handleMessage(ws, data.toString());
@@ -47,7 +56,7 @@ export function attachWebSocket(
     try {
       message = JSON.parse(raw) as ClientMessage;
     } catch {
-      ws.send(JSON.stringify({ type: "error", message: "invalid JSON" }));
+      safeSend(ws, JSON.stringify({ type: "error", message: "invalid JSON" }));
       return;
     }
 
@@ -55,7 +64,7 @@ export function attachWebSocket(
       switch (message.type) {
         case "list-sessions": {
           const response = await app.request("/sessions");
-          ws.send(await response.text());
+          safeSend(ws, await response.text());
           break;
         }
         case "create-session": {
@@ -64,7 +73,7 @@ export function attachWebSocket(
             headers: { "content-type": "application/json" },
             body: JSON.stringify(message.body ?? {}),
           });
-          ws.send(await response.text());
+          safeSend(ws, await response.text());
           break;
         }
         case "resolve-permission": {
@@ -76,19 +85,22 @@ export function attachWebSocket(
               body: JSON.stringify({ decision: message.body?.decision ?? "deny" }),
             },
           );
-          ws.send(await response.text());
+          safeSend(ws, await response.text());
           break;
         }
         case "abort": {
           const response = await app.request(`/sessions/${message.sessionID}/abort`, {
             method: "POST",
           });
-          ws.send(await response.text());
+          safeSend(ws, await response.text());
           break;
         }
         case "prompt": {
           if (!message.sessionID || typeof message.prompt !== "string") {
-            ws.send(JSON.stringify({ type: "error", message: "sessionID and prompt required" }));
+            safeSend(
+              ws,
+              JSON.stringify({ type: "error", message: "sessionID and prompt required" }),
+            );
             return;
           }
           const response = await app.request(`/sessions/${message.sessionID}/prompt`, {
@@ -102,7 +114,7 @@ export function attachWebSocket(
           });
 
           if (!response.body) {
-            ws.send(JSON.stringify({ type: "error", message: "no response stream" }));
+            safeSend(ws, JSON.stringify({ type: "error", message: "no response stream" }));
             return;
           }
 
@@ -120,7 +132,8 @@ export function attachWebSocket(
               buffer = buffer.slice(boundary + 2);
               const dataLine = frame.split("\n").find((line) => line.startsWith("data:"));
               if (dataLine) {
-                ws.send(
+                safeSend(
+                  ws,
                   JSON.stringify({
                     type: "event",
                     data: dataLine.slice(5).trim(),
@@ -131,16 +144,18 @@ export function attachWebSocket(
             }
           }
 
-          ws.send(JSON.stringify({ type: "done" }));
+          safeSend(ws, JSON.stringify({ type: "done" }));
           break;
         }
         default:
-          ws.send(
+          safeSend(
+            ws,
             JSON.stringify({ type: "error", message: `unknown message type: ${message.type}` }),
           );
       }
     } catch (error) {
-      ws.send(
+      safeSend(
+        ws,
         JSON.stringify({
           type: "error",
           message: error instanceof Error ? error.message : String(error),

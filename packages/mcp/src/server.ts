@@ -30,11 +30,15 @@ export function mcpContentFromOutput(output: ToolOutput): { content: McpContent[
   }
 }
 
-export function createMcpServer(tools: ToolDefinition<unknown>[]): McpServer {
+export function createMcpServer(
+  tools: ToolDefinition<unknown>[],
+  options: { allowDestructive?: boolean } = {},
+): McpServer {
   const server = new McpServer({ name: "harness", version: "0.0.0" });
   const logger = createLogger({ level: "silent" });
+  const exposed = options.allowDestructive ? tools : tools.filter((tool) => tool.readOnly);
 
-  for (const tool of tools) {
+  for (const tool of exposed) {
     server.registerTool(
       tool.id,
       {
@@ -60,8 +64,9 @@ export function createMcpServer(tools: ToolDefinition<unknown>[]): McpServer {
 
 export async function startMcpStdioServer(
   tools: ToolDefinition<unknown>[] = [],
+  options: { allowDestructive?: boolean } = {},
 ): Promise<McpServer> {
-  const server = createMcpServer(tools);
+  const server = createMcpServer(tools, options);
   const transport = new StdioServerTransport();
   await server.connect(transport);
   return server;
@@ -69,8 +74,9 @@ export async function startMcpStdioServer(
 
 export async function createMcpHttpHandler(
   tools: ToolDefinition<unknown>[] = [],
+  options: { allowDestructive?: boolean } = {},
 ): Promise<(request: Request) => Promise<Response>> {
-  const server = createMcpServer(tools);
+  const server = createMcpServer(tools, options);
   const transport = new WebStandardStreamableHTTPServerTransport({
     sessionIdGenerator: undefined,
   });

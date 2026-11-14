@@ -141,12 +141,17 @@ P1 completion:
 - **Plugin reload** — SDK `harness.reload()` re-reads config, reloads plugins, and
   clears cached agents.
 
-Tests: 33 shared + 90 core + 10 CLI + 16 TUI + 3 SDK + 5 server + 5 MCP + 1
-plugin-sdk + 5 sandbox + 3 LSP + 4 eval = **175 tests**.
+Tests: 33 shared + 93 core + 10 CLI + 16 TUI + 3 SDK + 5 server + 5 MCP + 1
+plugin-sdk + 5 sandbox + 3 LSP + 4 eval = **178 tests**.
 
-Remaining gaps: MCP OAuth, server-side plugin hot reload (SDK reload only),
-LSP hover/definition/references tools, real dataset download/runners for
-SWE-bench/Terminal-Bench, and native Windows sandbox (Docker/WSL2 fallback).
+Remaining scope (not yet implemented): git tools (`git_status`, `git_diff`,
+`git_log`, `git_commit`, `git_branch`, `worktree_create`), web tools
+(`webfetch`, `websearch`, `fetch`), `multi_edit`, `apply_patch`, `notebook_edit`,
+`snapshot`/`restore` tools, `memory_write`/`skill_load`, `ask_user`, image/PDF
+reading, TUI file completion/image paste/external editor/side-by-side diffs and
+configurable keybindings, MCP OAuth, server-side plugin hot reload, LSP
+hover/definition/references, real SWE-bench/Terminal-Bench dataset runners, and
+native Windows sandbox (Docker/WSL2 fallback).
 
 ---
 
@@ -326,26 +331,26 @@ harness/
 
 ## 5. Toolchain and runtime decisions
 
-| Concern         | Choice                                                     | Rationale / notes                               |
-| --------------- | ---------------------------------------------------------- | ----------------------------------------------- |
-| Language        | TypeScript, strict, ESM                                    | Ecosystem + type-safe tool contracts            |
-| Runtime         | Node ≥ 24 (dev on 26)                                      | Native `node:sqlite`, WebCrypto, test runner    |
-| Package manager | pnpm 12 workspaces                                         | Fast, strict node_modules                       |
-| Build           | `tsup`/esbuild for packages, `tsc --noEmit` for types      | Fast; TS 7 native compiler evaluated in Phase 0 |
-| Lint/format     | Biome 2.x                                                  | Single tool, fast, config in JSON               |
-| Test            | Vitest 5 + Docker + Playwright (web)                       | Unit, integration, e2e                          |
-| Schema          | Zod 4 + `z.toJSONSchema`                                   | Single source for config, tools, API            |
-| Model layer     | Vercel AI SDK (`ai@7`)                                     | Multi-provider streaming + tool calls           |
-| MCP             | `@modelcontextprotocol/sdk` 1.32+                          | Official, supports stdio/SSE/HTTP               |
-| HTTP            | Hono 4 + `@hono/zod-openapi`                               | Small, typed, OpenAPI generation                |
-| TUI             | Ink 8 + React 19                                           | Component model, mature terminal quirks handled |
-| Highlighting    | Shiki 4 (lazy WASM)                                        | Accurate grammars; tree-sitter optional         |
-| Persistence     | `node:sqlite` (WAL) + append-only JSONL event log          | No native build; crash-safe replay              |
-| Search          | ripgrep (auto-bundled via `@vscode/ripgrep`), `tinyglobby` | Fast, gitignore-aware                           |
-| Git             | system `git` via `simple-git`/execFile                     | Compatibility, worktrees, hooks                 |
-| LSP             | `vscode-languageserver-protocol` + custom client           | Spawn stdio servers                             |
-| Observability   | `pino` logs + OpenTelemetry SDK                            | Traces, metrics, cost                           |
-| Packaging       | npm + standalone binaries + Docker + Homebrew              | `npx harness`, `brew install`, `docker run`     |
+| Concern         | Choice                                                | Rationale / notes                               |
+| --------------- | ----------------------------------------------------- | ----------------------------------------------- |
+| Language        | TypeScript, strict, ESM                               | Ecosystem + type-safe tool contracts            |
+| Runtime         | Node ≥ 24 (dev on 26)                                 | Native `node:sqlite`, WebCrypto, test runner    |
+| Package manager | pnpm 12 workspaces                                    | Fast, strict node_modules                       |
+| Build           | `tsup`/esbuild for packages, `tsc --noEmit` for types | Fast; TS 7 native compiler evaluated in Phase 0 |
+| Lint/format     | Biome 2.x                                             | Single tool, fast, config in JSON               |
+| Test            | Vitest 5 + Docker + Playwright (web)                  | Unit, integration, e2e                          |
+| Schema          | Zod 4 + `z.toJSONSchema`                              | Single source for config, tools, API            |
+| Model layer     | Custom HTTP/SSE provider adapters                     | Exact control over streaming, tool calls, cost  |
+| MCP             | `@modelcontextprotocol/sdk` 1.32+                     | Official; stdio + Streamable HTTP               |
+| HTTP            | Hono 4                                                | Small, typed, SSE + manual OpenAPI              |
+| TUI             | Ink 8 + React 19                                      | Component model; custom markdown/diff rendering |
+| Highlighting    | Custom markdown/code rendering                        | Shiki/tree-sitter not integrated yet            |
+| Persistence     | `node:sqlite` (WAL) + JSONL event mirror              | No native build; crash-safe replay              |
+| Search          | `tinyglobby` + Node fallback                          | ripgrep fast path not integrated yet            |
+| Git             | Not integrated yet                                    | `execFile` + system git planned                 |
+| LSP             | `vscode-languageserver-protocol` + custom client      | Spawn stdio servers                             |
+| Observability   | `pino` logs + OpenTelemetry SDK                       | Traces, metrics, cost                           |
+| Packaging       | npm + standalone binaries + Docker + Homebrew         | `npx harness`, `brew install`, `docker run`     |
 
 Notes:
 
@@ -1433,15 +1438,17 @@ Release gate:
 ## 34. Open decisions
 
 1. **Name/branding:** `harness` is a placeholder; confirm before package publish.
-2. **AI SDK version:** adopt `ai@7` or hand-rolled streaming for finer control.
-   Decision deferred to M0 spike.
+2. **Provider abstraction:** hand-rolled HTTP/SSE adapters were selected over the
+   Vercel AI SDK for exact control over tool-call streaming, retries, and cost.
+   Revisit if provider coverage grows beyond the current set.
 3. **Persistence:** `node:sqlite` vs `better-sqlite3`; benchmark in M2.
 4. **TypeScript:** TS 7 native compiler vs TS 5.9 for tooling compatibility;
    evaluate in M0.
 5. **Web UI:** build in-house vs defer to P2.
 6. **Benchmark adapters:** include SWE-bench/Terminal-Bench at 1.0 or later.
 7. **Telemetry:** default off vs opt-in prompt; legal review required.
-8. **Windows sandbox:** WSL2 requirement vs native AppContainer.
+8. **Windows sandbox:** passthrough execution is the default; Docker/WSL2 is the
+   documented isolation path. Native AppContainer is not implemented.
 
 ---
 

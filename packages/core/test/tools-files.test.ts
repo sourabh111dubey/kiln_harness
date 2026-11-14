@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, symlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { HarnessError } from "@harness/shared";
 import { afterEach, describe, expect, it } from "vitest";
@@ -103,6 +103,30 @@ describe("file tools", () => {
     );
     if (missing.kind !== "text") throw new Error("expected text output");
     expect(missing.text).toContain("Could not find");
+  });
+
+  it("normalizes CRLF edits", async () => {
+    const cwd = await tempDir();
+    await writeFile(join(cwd, "a.ts"), "hello\r\nworld\r\n");
+
+    const output = await editTool.execute(
+      { path: "a.ts", oldString: "hello\nworld", newString: "hi\nthere" },
+      makeContext(cwd),
+    );
+
+    expect(output.kind).toBe("diff");
+    expect(await readFile(join(cwd, "a.ts"), "utf8")).toBe("hi\nthere\n");
+  });
+
+  it.skipIf(process.platform === "win32")("blocks symlinks that escape the workspace", async () => {
+    const outside = await tempDir();
+    const inside = await tempDir();
+    await writeFile(join(outside, "secret.txt"), "secret\n");
+    await symlink(join(outside, "secret.txt"), join(inside, "link.txt"));
+
+    await expect(readTool.execute({ path: "link.txt" }, makeContext(inside))).rejects.toMatchObject(
+      { code: "permission_denied" },
+    );
   });
 
   it("supports replaceAll", async () => {
