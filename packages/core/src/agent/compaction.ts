@@ -24,7 +24,7 @@ export function estimateMessagesTokens(messages: ChatMessage[]): number {
     (total, message) =>
       total +
       estimateTokens(message.content) +
-      (message.toolCalls?.length ?? 0) * 40 +
+      estimateTokens(JSON.stringify(message.toolCalls ?? [])) +
       (message.toolCallID ? 20 : 0),
     0,
   );
@@ -59,8 +59,17 @@ export function compactMessages(
     };
   }
 
-  const omittedMessages = messages.slice(0, messages.length - keepRecent);
-  const recent = messages.slice(-keepRecent);
+  let split = messages.length - keepRecent;
+  while (
+    split > 0 &&
+    messages[split]?.role === "tool" &&
+    messages[split - 1]?.role === "assistant"
+  ) {
+    split--;
+  }
+
+  const omittedMessages = messages.slice(0, split);
+  const recent = messages.slice(split);
   const summary = [
     `Earlier conversation summary (${omittedMessages.length} messages omitted):`,
     ...omittedMessages.map(summarize),

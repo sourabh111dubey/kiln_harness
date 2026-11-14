@@ -48,6 +48,20 @@ export function createDefaultProviderRegistry(
     );
   }
 
+  if (env.OPENROUTER_API_KEY) {
+    const headers: Record<string, string> = {};
+    if (env.OPENROUTER_REFERER) headers["HTTP-Referer"] = env.OPENROUTER_REFERER;
+    if (env.OPENROUTER_TITLE) headers["X-Title"] = env.OPENROUTER_TITLE;
+    registry.register(
+      new OpenAIProvider({
+        id: "openrouter",
+        apiKey: env.OPENROUTER_API_KEY,
+        baseURL: env.OPENROUTER_BASE_URL ?? "https://openrouter.ai/api/v1",
+        headers,
+      }),
+    );
+  }
+
   const geminiKey = env.GEMINI_API_KEY ?? env.GOOGLE_API_KEY;
   if (geminiKey) {
     registry.register(
@@ -83,6 +97,7 @@ export function availableProviderIds(env: NodeJS.ProcessEnv = process.env): stri
   const ids: string[] = ["ollama"];
   if (env.ANTHROPIC_API_KEY) ids.push("anthropic");
   if (env.OPENAI_API_KEY) ids.push("openai");
+  if (env.OPENROUTER_API_KEY) ids.push("openrouter");
   if (env.GEMINI_API_KEY ?? env.GOOGLE_API_KEY) ids.push("gemini");
   if (env.HARNESS_CUSTOM_BASE_URL) ids.push("custom");
   return ids;

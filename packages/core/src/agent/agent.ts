@@ -111,14 +111,15 @@ function parseToolInput(raw: string): unknown {
   try {
     return JSON.parse(raw);
   } catch {
-    throw new HarnessError(
-      "tool_error",
-      `Model produced invalid tool input JSON: ${raw.slice(0, 300)}`,
-    );
+    return { __invalid_json: raw };
   }
 }
 
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number, signal: AbortSignal): Promise<T> {
+  if (signal.aborted) {
+    return Promise.reject(errors.aborted("Tool execution aborted"));
+  }
+
   return new Promise<T>((resolve, reject) => {
     const timer = setTimeout(() => {
       cleanup();
@@ -219,6 +220,10 @@ export class Agent {
     return [...this.messages];
   }
 
+  replaceMessages(messages: ChatMessage[]): void {
+    this.messages = [...messages];
+  }
+
   getUsage(): Usage {
     return { ...this.usage };
   }
@@ -244,6 +249,7 @@ export class Agent {
     };
 
     const maxTurns = this.options.maxTurns ?? 25;
+    this.totalToolCalls = 0;
     const system =
       this.options.systemPrompt ??
       buildSystemPrompt({
@@ -254,14 +260,12 @@ export class Agent {
       });
 
     this.updateSession({ status: "running" });
-    this.pushMessage({ role: "user", content: input });
+    const incoming: ChatMessage = { role: "user", content: input };
     const received = await this.options.plugins?.messageReceived({
       sessionID: this.session.id,
-      message: { role: "user", content: input },
+      message: incoming,
     });
-    if (received) {
-      this.messages[this.messages.length - 1] = received;
-    }
+    this.pushMessage(received ?? incoming);
     await emit({ type: "turn.start", prompt: input });
     await this.options.plugins?.sessionStart({
       sessionID: this.session.id,

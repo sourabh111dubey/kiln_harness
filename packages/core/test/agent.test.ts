@@ -187,18 +187,27 @@ describe("agent loop", () => {
     expect(result.toolCalls).toBe(2);
   });
 
-  it("rejects invalid tool input JSON", async () => {
+  it("returns a recoverable tool error for invalid JSON", async () => {
     const cwd = await tempDir();
     const provider = new FakeProvider([
       [
         { type: "tool-call-start", callID: "call_1", tool: "read" },
         { type: "tool-call-delta", callID: "call_1", argsDelta: "{not json" },
         { type: "tool-call-end", callID: "call_1" },
+        { type: "finish", reason: "tool_calls" },
+      ],
+      [
+        { type: "text-delta", text: "Recovered." },
+        { type: "finish", reason: "stop" },
       ],
     ]);
 
-    const agent = agentFor(cwd, provider);
-    await expect(agent.prompt("go")).rejects.toMatchObject({ code: "tool_error" });
+    const { result, events } = await run(agentFor(cwd, provider));
+    expect(result.text).toBe("Recovered.");
+    const toolResult = events.find((event) => event.type === "tool.result");
+    expect(toolResult).toBeDefined();
+    if (toolResult?.type !== "tool.result") throw new Error("expected tool result");
+    expect(toolResult.output).toMatchObject({ kind: "text" });
   });
 
   it("updates todos through the tool context", async () => {

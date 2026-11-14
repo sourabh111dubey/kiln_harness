@@ -74,7 +74,7 @@ export async function* sseData(response: Response): AsyncGenerator<string> {
       const { done, value } = await reader.read();
       if (done) break;
 
-      buffer += decoder.decode(value, { stream: true });
+      buffer += decoder.decode(value, { stream: true }).replace(/\r\n/g, "\n");
       let boundary = buffer.indexOf("\n\n");
       while (boundary !== -1) {
         const frame = buffer.slice(0, boundary);
@@ -93,6 +93,7 @@ export async function* sseData(response: Response): AsyncGenerator<string> {
       }
     }
   } finally {
+    await reader.cancel().catch(() => undefined);
     reader.releaseLock();
   }
 }

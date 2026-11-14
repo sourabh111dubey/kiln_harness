@@ -60,6 +60,9 @@ export function toHarnessError(
 ): HarnessError {
   if (isHarnessError(error)) return error;
   if (error instanceof Error) {
+    if (error.name === "AbortError" || (error as { code?: unknown }).code === "ABORT_ERR") {
+      return new HarnessError("aborted", error.message, { cause: error });
+    }
     return new HarnessError(fallbackCode, error.message, {
       cause: error,
       details: { name: error.name },

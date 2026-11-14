@@ -31,18 +31,40 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+async function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_resolve, reject) => {
+        timer = setTimeout(
+          () => reject(new HarnessError("io_error", `${label} timed out after ${ms}ms`)),
+          ms,
+        );
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 function toUri(path: string): string {
   return pathToFileURL(path).href;
 }
 
 function fromUri(uri: string): string {
-  return fileURLToPath(uri);
+  try {
+    return fileURLToPath(uri);
+  } catch {
+    return uri;
+  }
 }
 
 export class LspClient {
   private connection?: MessageConnection;
   private child?: ChildProcessWithoutNullStreams;
   private readonly diagnostics = new Map<string, LspDiagnosticLike[]>();
+  private readonly open = new Set<string>();
   private version = 0;
 
   constructor(
@@ -61,12 +83,32 @@ export class LspClient {
       throw new HarnessError("io_error", `LSP server ${this.config.command} has no stdio`);
     }
 
+    await new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        reject(new HarnessError("io_error", `LSP server ${this.config.command} failed to spawn`));
+      }, 5_000);
+      child.once("spawn", () => {
+        clearTimeout(timer);
+        resolve();
+      });
+      child.once("error", (error) => {
+        clearTimeout(timer);
+        reject(error);
+      });
+    });
+
     this.child = child;
+    child.stderr?.resume();
+
     const connection = createMessageConnection(
       new StreamMessageReader(child.stdout),
       new StreamMessageWriter(child.stdin),
     );
     this.connection = connection;
+
+    connection.onClose(() => {
+      this.connection = undefined;
+    });
 
     connection.onNotification(
       "textDocument/publishDiagnostics",
@@ -77,27 +119,56 @@ export class LspClient {
 
     connection.listen();
 
-    await connection.sendRequest("initialize", {
-      processId: process.pid,
-      rootUri: toUri(this.root),
-      capabilities: {},
-    });
-    await connection.sendNotification("initialized", {});
+    try {
+      await withTimeout(
+        connection.sendRequest("initialize", {
+          processId: process.pid,
+          rootUri: toUri(this.root),
+          capabilities: {
+            textDocument: {
+              synchronization: { dynamicRegistration: true },
+              publishDiagnostics: { relatedInformation: true },
+            },
+            workspace: { configuration: true, workspaceFolders: true },
+          },
+          workspaceFolders: [{ uri: toUri(this.root), name: "workspace" }],
+        }),
+        10_000,
+        "LSP initialize",
+      );
+      await connection.sendNotification("initialized", {});
+    } catch (error) {
+      await this.shutdown().catch(() => undefined);
+      throw error;
+    }
   }
 
   async didOpen(path: string, text: string): Promise<void> {
     if (!this.connection) return;
     const uri = toUri(path);
     this.version++;
-    await this.connection.sendNotification("textDocument/didOpen", {
-      textDocument: {
-        uri,
-        languageId: this.config.languageId,
-        version: this.version,
-        text,
-      },
-    });
-    await delay(100);
+
+    if (this.open.has(uri)) {
+      await this.connection.sendNotification("textDocument/didChange", {
+        textDocument: { uri, version: this.version },
+        contentChanges: [{ text }],
+      });
+    } else {
+      await this.connection.sendNotification("textDocument/didOpen", {
+        textDocument: {
+          uri,
+          languageId: this.config.languageId,
+          version: this.version,
+          text,
+        },
+      });
+      this.open.add(uri);
+    }
+
+    const deadline = Date.now() + 2_000;
+    while (!this.diagnostics.has(uri) && Date.now() < deadline) {
+      await delay(50);
+    }
   }
 
   diagnosticsFor(path: string): LspDiagnosticLike[] {
@@ -107,9 +178,10 @@ export class LspClient {
   async symbolsFor(path: string): Promise<LspSymbolLike[]> {
     if (!this.connection) return [];
     try {
-      return (await this.connection.sendRequest("textDocument/documentSymbol", {
+      const result = await this.connection.sendRequest("textDocument/documentSymbol", {
         textDocument: { uri: toUri(path) },
-      })) as LspSymbolLike[];
+      });
+      return Array.isArray(result) ? (result as LspSymbolLike[]) : [];
     } catch {
       return [];
     }
@@ -120,8 +192,8 @@ export class LspClient {
     const connection = this.connection;
     this.connection = undefined;
     try {
-      await connection.sendRequest("shutdown");
-      await connection.sendNotification("exit");
+      await withTimeout(connection.sendRequest("shutdown"), 2_000, "LSP shutdown");
+      await withTimeout(connection.sendNotification("exit"), 1_000, "LSP exit");
     } catch {
       // The server may already be gone.
     } finally {
@@ -145,7 +217,8 @@ export function findServerForPath(
 ): { key: string; config: LspServerConfig } | undefined {
   const extension = extname(path).toLowerCase();
   for (const [key, config] of Object.entries(servers)) {
-    if (config.extensions.includes(extension)) return { key, config };
+    const extensions = config.extensions.map((entry) => entry.toLowerCase());
+    if (extensions.includes(extension)) return { key, config };
   }
   return undefined;
 }

@@ -27,9 +27,9 @@ M0:
 M1:
 
 - `@harness/core`: provider registry with Anthropic, OpenAI-compatible (OpenAI,
-  Ollama, custom), and Gemini streaming adapters; normalized SSE parsing;
-  streaming agent loop with parallel read-only tools, abort, turn caps, and
-  duplicate-input validation.
+  OpenRouter, Ollama, custom), and Gemini streaming adapters; normalized SSE
+  parsing; streaming agent loop with parallel read-only tools, abort, turn caps,
+  and duplicate-input validation.
 - Permission engine with `default`, `acceptEdits`, `plan`, `bypassPermissions`,
   and `custom` modes, rule matching, dangerous-command detection, and path
   confinement.
@@ -141,8 +141,8 @@ P1 completion:
 - **Plugin reload** — SDK `harness.reload()` re-reads config, reloads plugins, and
   clears cached agents.
 
-Tests: 33 shared + 93 core + 10 CLI + 16 TUI + 3 SDK + 5 server + 5 MCP + 1
-plugin-sdk + 5 sandbox + 3 LSP + 4 eval = **178 tests**.
+Tests: 33 shared + 94 core + 10 CLI + 16 TUI + 3 SDK + 5 server + 5 MCP + 1
+plugin-sdk + 6 sandbox + 3 LSP + 4 eval = **180 tests**.
 
 Remaining scope (not yet implemented): git tools (`git_status`, `git_diff`,
 `git_log`, `git_commit`, `git_branch`, `worktree_create`), web tools

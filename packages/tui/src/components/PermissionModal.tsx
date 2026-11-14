@@ -26,7 +26,7 @@ export function PermissionModal({
       onResolve("deny");
       return;
     }
-    if (key.return || input === "y" || input === "a") {
+    if (input === "y" || input === "a") {
       onResolve("allow");
       return;
     }

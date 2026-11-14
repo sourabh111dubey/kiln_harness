@@ -14,6 +14,7 @@ describe("provider registry", () => {
       ANTHROPIC_API_KEY: "a",
       OPENAI_API_KEY: "o",
       GEMINI_API_KEY: "g",
+      OPENROUTER_API_KEY: "or",
       HARNESS_CUSTOM_BASE_URL: "http://localhost:9999/v1",
     });
 
@@ -21,13 +22,18 @@ describe("provider registry", () => {
     expect(registry.has("openai")).toBe(true);
     expect(registry.has("gemini")).toBe(true);
     expect(registry.has("custom")).toBe(true);
+    expect(registry.has("openrouter")).toBe(true);
     expect(registry.get("missing")).toBeUndefined();
   });
 
   it("reports configured provider ids", () => {
     expect(availableProviderIds({})).toEqual(["ollama"]);
-    expect(availableProviderIds({ ANTHROPIC_API_KEY: "a", OPENAI_API_KEY: "o" })).toEqual(
-      expect.arrayContaining(["ollama", "anthropic", "openai"]),
-    );
+    expect(
+      availableProviderIds({
+        ANTHROPIC_API_KEY: "a",
+        OPENAI_API_KEY: "o",
+        OPENROUTER_API_KEY: "r",
+      }),
+    ).toEqual(expect.arrayContaining(["ollama", "anthropic", "openai", "openrouter"]));
   });
 });

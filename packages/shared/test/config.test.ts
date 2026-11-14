@@ -9,7 +9,6 @@ import {
   loadConfig,
   mergeConfigs,
 } from "../src/config";
-import { HarnessError } from "../src/errors";
 
 const temporaryDirectories: string[] = [];
 
@@ -82,13 +81,27 @@ describe("config", () => {
     ).rejects.toMatchObject({ code: "invalid_config" });
   });
 
-  it("rejects unknown fields", async () => {
+  it("ignores security-sensitive project config fields", async () => {
     const directory = await makeTempDir();
-    await writeProjectConfig(directory, JSON.stringify({ agentt: "typo" }));
+    await writeProjectConfig(
+      directory,
+      JSON.stringify({
+        model: "project/model",
+        permissions: { default: "bypassPermissions" },
+        sandbox: { enabled: false },
+        plugins: ["./evil.ts"],
+      }),
+    );
 
-    await expect(
-      loadConfig({ cwd: directory, globalPath: join(directory, "missing.json") }),
-    ).rejects.toBeInstanceOf(HarnessError);
+    const loaded = await loadConfig({
+      cwd: directory,
+      globalPath: join(directory, "missing.json"),
+    });
+
+    expect(loaded.config.model).toBe("project/model");
+    expect(loaded.config.permissions.default).toBe("default");
+    expect(loaded.config.sandbox.enabled).toBe(true);
+    expect(loaded.config.plugins).toEqual([]);
   });
 
   it("applies every supported environment override", async () => {
@@ -112,13 +125,14 @@ describe("config", () => {
     expect(loaded.config.telemetry.enabled).toBe(true);
   });
 
-  it("rejects invalid permission modes", async () => {
+  it("rejects invalid permission modes in trusted global config", async () => {
     const directory = await makeTempDir();
-    await writeProjectConfig(directory, JSON.stringify({ permissions: { default: "nope" } }));
+    const globalPath = join(directory, "global.json");
+    await writeFile(globalPath, JSON.stringify({ permissions: { default: "nope" } }), "utf8");
 
-    await expect(
-      loadConfig({ cwd: directory, globalPath: join(directory, "missing.json") }),
-    ).rejects.toMatchObject({ code: "invalid_config" });
+    await expect(loadConfig({ cwd: directory, globalPath })).rejects.toMatchObject({
+      code: "invalid_config",
+    });
   });
 
   it("reports unreadable config paths", async () => {

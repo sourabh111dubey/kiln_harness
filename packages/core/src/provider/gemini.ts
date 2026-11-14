@@ -38,10 +38,36 @@ interface GeminiChunk {
   };
 }
 
+const UNSUPPORTED_JSON_SCHEMA_KEYS = new Set([
+  "additionalProperties",
+  "exclusiveMinimum",
+  "exclusiveMaximum",
+  "const",
+  "oneOf",
+  "allOf",
+  "not",
+  "uniqueItems",
+  "multipleOf",
+  "patternProperties",
+  "propertyNames",
+  "dependencies",
+]);
+
+function cleanSchema(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(cleanSchema);
+  if (value !== null && typeof value === "object") {
+    const result: Record<string, unknown> = {};
+    for (const [key, entry] of Object.entries(value as Record<string, unknown>)) {
+      if (UNSUPPORTED_JSON_SCHEMA_KEYS.has(key)) continue;
+      result[key] = cleanSchema(entry);
+    }
+    return result;
+  }
+  return value;
+}
+
 function cleanParameters(parameters: Record<string, unknown>): Record<string, unknown> {
-  const clone = structuredClone(parameters);
-  delete clone.$schema;
-  return clone;
+  return cleanSchema(structuredClone(parameters)) as Record<string, unknown>;
 }
 
 function toGeminiContents(messages: ChatMessage[]): GeminiContent[] {

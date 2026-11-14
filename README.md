@@ -124,13 +124,14 @@ Themes: `HARNESS_THEME=default|dim|highContrast`; `NO_COLOR=1` disables color.
 
 ## Providers
 
-| Provider id | Env var                   | Notes                                     |
-| ----------- | ------------------------- | ----------------------------------------- |
-| `anthropic` | `ANTHROPIC_API_KEY`       | Messages API, streaming tool calls        |
-| `openai`    | `OPENAI_API_KEY`          | Chat Completions, OpenAI-compatible       |
-| `gemini`    | `GEMINI_API_KEY`          | `streamGenerateContent`                   |
-| `ollama`    | `OLLAMA_HOST`             | Local, OpenAI-compatible, no key required |
-| `custom`    | `HARNESS_CUSTOM_BASE_URL` | Any OpenAI-compatible endpoint            |
+| Provider id  | Env var                   | Notes                                                     |
+| ------------ | ------------------------- | --------------------------------------------------------- |
+| `anthropic`  | `ANTHROPIC_API_KEY`       | Messages API, streaming tool calls                        |
+| `openai`     | `OPENAI_API_KEY`          | Chat Completions, OpenAI-compatible                       |
+| `openrouter` | `OPENROUTER_API_KEY`      | OpenAI-compatible routing; `OPENROUTER_BASE_URL` override |
+| `gemini`     | `GEMINI_API_KEY`          | `streamGenerateContent`                                   |
+| `ollama`     | `OLLAMA_HOST`             | Local, OpenAI-compatible, no key required                 |
+| `custom`     | `HARNESS_CUSTOM_BASE_URL` | Any OpenAI-compatible endpoint                            |
 
 Base URLs can be overridden with `ANTHROPIC_BASE_URL`, `OPENAI_BASE_URL`,
 `GEMINI_BASE_URL`, and `OLLAMA_HOST`.

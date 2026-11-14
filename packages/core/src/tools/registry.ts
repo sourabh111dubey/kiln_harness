@@ -48,6 +48,19 @@ export class ToolRegistry {
       });
     }
 
+    if (
+      typeof input === "object" &&
+      input !== null &&
+      !Array.isArray(input) &&
+      typeof (input as Record<string, unknown>).__invalid_json === "string"
+    ) {
+      throw new HarnessError(
+        "tool_error",
+        `Invalid JSON input for ${id}: ${String((input as Record<string, unknown>).__invalid_json).slice(0, 300)}`,
+        { details: { tool: id } },
+      );
+    }
+
     const parsed = tool.input.safeParse(input);
     if (!parsed.success) {
       const issues = parsed.error.issues

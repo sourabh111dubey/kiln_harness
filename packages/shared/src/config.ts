@@ -72,17 +72,42 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+const PROJECT_CONFIG_KEYS = [
+  "$schema",
+  "model",
+  "smallModel",
+  "agent",
+  "tools",
+  "skills",
+  "instructions",
+  "ui",
+] as const;
+
+function sanitizeProjectConfig(value: unknown): unknown {
+  if (!isPlainObject(value)) return value;
+  const result: Record<string, unknown> = {};
+  for (const key of PROJECT_CONFIG_KEYS) {
+    if (key in value) result[key] = value[key];
+  }
+  return result;
+}
+
 export function deepMerge(base: unknown, override: unknown): unknown {
   if (!isPlainObject(base) || !isPlainObject(override)) return override;
   const result: Record<string, unknown> = { ...base };
   for (const [key, value] of Object.entries(override)) {
+    if (key === "__proto__" || key === "constructor" || key === "prototype") continue;
     result[key] = key in base ? deepMerge(base[key], value) : value;
   }
   return result;
 }
 
 export function mergeConfigs(...sources: unknown[]): unknown {
-  return sources.reduce<unknown>((merged, source) => deepMerge(merged, source), {});
+  return sources.reduce<unknown>(
+    (merged, source) =>
+      source === undefined || source === null ? merged : deepMerge(merged, source),
+    {},
+  );
 }
 
 export function resolveGlobalConfigPath(env: NodeJS.ProcessEnv = process.env): string {
@@ -165,7 +190,8 @@ export async function loadConfig(
   for (const path of [globalPath, projectPath]) {
     const value = await readJsoncFile(path);
     if (value === undefined) continue;
-    merged = deepMerge(merged, value);
+    const safeValue = path === projectPath ? sanitizeProjectConfig(value) : value;
+    merged = deepMerge(merged, safeValue);
     sources.push(path);
   }
 

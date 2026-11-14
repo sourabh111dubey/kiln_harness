@@ -27,6 +27,12 @@ export function attachWebSocket(
 ): () => void {
   const wss = new WebSocketServer({ noServer: true });
 
+  const internalRequest = async (path: string, init?: RequestInit): Promise<Response> => {
+    const headers = new Headers(init?.headers);
+    if (token) headers.set("authorization", `Bearer ${token}`);
+    return app.request(path, { ...init, headers });
+  };
+
   server.on("upgrade", (request, socket, head) => {
     const url = new URL(request.url ?? "/", "http://localhost");
     if (url.pathname !== "/ws") {
@@ -63,12 +69,12 @@ export function attachWebSocket(
     try {
       switch (message.type) {
         case "list-sessions": {
-          const response = await app.request("/sessions");
+          const response = await internalRequest("/sessions");
           safeSend(ws, await response.text());
           break;
         }
         case "create-session": {
-          const response = await app.request("/sessions", {
+          const response = await internalRequest("/sessions", {
             method: "POST",
             headers: { "content-type": "application/json" },
             body: JSON.stringify(message.body ?? {}),
@@ -77,7 +83,7 @@ export function attachWebSocket(
           break;
         }
         case "resolve-permission": {
-          const response = await app.request(
+          const response = await internalRequest(
             `/sessions/${message.sessionID}/permissions/${message.requestID}`,
             {
               method: "POST",
@@ -89,7 +95,7 @@ export function attachWebSocket(
           break;
         }
         case "abort": {
-          const response = await app.request(`/sessions/${message.sessionID}/abort`, {
+          const response = await internalRequest(`/sessions/${message.sessionID}/abort`, {
             method: "POST",
           });
           safeSend(ws, await response.text());
@@ -103,7 +109,11 @@ export function attachWebSocket(
             );
             return;
           }
-          const response = await app.request(`/sessions/${message.sessionID}/prompt`, {
+          const controller = new AbortController();
+          const onClose = () => controller.abort();
+          ws.on("close", onClose);
+
+          const response = await internalRequest(`/sessions/${message.sessionID}/prompt`, {
             method: "POST",
             headers: { "content-type": "application/json" },
             body: JSON.stringify({
@@ -111,10 +121,26 @@ export function attachWebSocket(
               model: message.model,
               permissionMode: message.permissionMode,
             }),
+            signal: controller.signal,
           });
+
+          const contentType = response.headers.get("content-type") ?? "";
+          if (!response.ok || !contentType.includes("text/event-stream")) {
+            const body = await response.text();
+            safeSend(
+              ws,
+              JSON.stringify({
+                type: "error",
+                message: `HTTP ${response.status}: ${body.slice(0, 300)}`,
+              }),
+            );
+            ws.off("close", onClose);
+            return;
+          }
 
           if (!response.body) {
             safeSend(ws, JSON.stringify({ type: "error", message: "no response stream" }));
+            ws.off("close", onClose);
             return;
           }
 
@@ -122,26 +148,31 @@ export function attachWebSocket(
           const decoder = new TextDecoder();
           let buffer = "";
 
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            buffer += decoder.decode(value, { stream: true });
-            let boundary = buffer.indexOf("\n\n");
-            while (boundary !== -1) {
-              const frame = buffer.slice(0, boundary);
-              buffer = buffer.slice(boundary + 2);
-              const dataLine = frame.split("\n").find((line) => line.startsWith("data:"));
-              if (dataLine) {
-                safeSend(
-                  ws,
-                  JSON.stringify({
-                    type: "event",
-                    data: dataLine.slice(5).trim(),
-                  }),
-                );
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              buffer += decoder.decode(value, { stream: true });
+              let boundary = buffer.indexOf("\n\n");
+              while (boundary !== -1) {
+                const frame = buffer.slice(0, boundary);
+                buffer = buffer.slice(boundary + 2);
+                const dataLine = frame.split("\n").find((line) => line.startsWith("data:"));
+                if (dataLine) {
+                  safeSend(
+                    ws,
+                    JSON.stringify({
+                      type: "event",
+                      data: dataLine.slice(5).trim(),
+                    }),
+                  );
+                }
+                boundary = buffer.indexOf("\n\n");
               }
-              boundary = buffer.indexOf("\n\n");
             }
+          } finally {
+            await reader.cancel().catch(() => undefined);
+            ws.off("close", onClose);
           }
 
           safeSend(ws, JSON.stringify({ type: "done" }));

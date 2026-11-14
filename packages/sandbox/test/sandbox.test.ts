@@ -32,11 +32,18 @@ describe("sandbox adapters", () => {
 
   it("uses Docker with no network and the workspace mounted", () => {
     const sandbox = new DockerSandbox({ workspace: "/tmp/work" });
-    const wrapped = sandbox.wrap("printf hi");
+    const wrapped = sandbox.wrap("printf hi", { cwd: "/tmp/work/sub" });
     expect(wrapped.command).toBe("docker");
     expect(wrapped.args).toContain("none");
     expect(wrapped.args).toContain("/tmp/work:/work");
+    expect(wrapped.args).toContain("/work/sub");
     expect(wrapped.args).toContain("node:24-slim");
+  });
+
+  it("refuses filesystem roots", () => {
+    expect(() => createSandbox({ workspace: "/", platform: "linux" })).toThrow(
+      "Refusing to sandbox",
+    );
   });
 
   it("selects an adapter by platform", () => {

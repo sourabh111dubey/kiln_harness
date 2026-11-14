@@ -294,12 +294,16 @@ export async function createHarnessApp(options: ServerOptions = {}): Promise<{
     const mode = permissionMode ?? session.permissions ?? defaultPermission;
     const key = `${session.id}:${modelRef}:${mode}`;
     const existing = context.agents.get(key);
-    if (existing) return existing;
+    if (existing) {
+      existing.replaceMessages(store.readMessages(session.id));
+      return existing;
+    }
 
     const permissions = new PermissionEngine({
       mode,
       cwd: session.cwd,
       rules: loaded.config.permissions.rules,
+      isReadOnly: (tool) => tools.get(tool)?.readOnly ?? false,
     });
 
     const sandbox = loaded.config.sandbox.enabled
@@ -410,7 +414,7 @@ export async function createHarnessApp(options: ServerOptions = {}): Promise<{
       model,
       agent: typeof body.agent === "string" ? body.agent : loaded.config.agent,
       title: typeof body.title === "string" ? body.title : undefined,
-      permissions: parsePermissionMode(body.permissionMode),
+      permissions: parsePermissionMode(body.permissionMode) ?? loaded.config.permissions.default,
     });
     return c.json(session, 201);
   });
@@ -422,7 +426,13 @@ export async function createHarnessApp(options: ServerOptions = {}): Promise<{
   });
 
   app.delete("/sessions/:id", (c) => {
-    const deleted = store.delete(c.req.param("id"));
+    const id = c.req.param("id");
+    context.aborts.get(id)?.abort();
+    denyPending(id);
+    for (const key of [...context.agents.keys()]) {
+      if (key.startsWith(`${id}:`)) context.agents.delete(key);
+    }
+    const deleted = store.delete(id);
     return deleted ? c.json({ deleted: true }) : jsonError("session not found", 404);
   });
 
@@ -461,6 +471,9 @@ export async function createHarnessApp(options: ServerOptions = {}): Promise<{
       keepRecent: 6,
     });
     store.replaceMessages(session.id, result.messages);
+    for (const key of [...context.agents.keys()]) {
+      if (key.startsWith(`${session.id}:`)) context.agents.delete(key);
+    }
     return c.json(result);
   });
 
@@ -469,6 +482,10 @@ export async function createHarnessApp(options: ServerOptions = {}): Promise<{
     const decision = body.decision;
     if (decision !== "allow" && decision !== "deny" && decision !== "ask") {
       return jsonError("decision must be allow or deny");
+    }
+    const entry = context.pending.get(c.req.param("requestID"));
+    if (!entry || entry.request.sessionID !== c.req.param("id")) {
+      return jsonError("permission request not found", 404);
     }
     const resolved = resolvePermission(c.req.param("requestID"), decision);
     return resolved ? c.json({ resolved: true }) : jsonError("permission request not found", 404);
@@ -492,12 +509,18 @@ export async function createHarnessApp(options: ServerOptions = {}): Promise<{
       return jsonError(error instanceof Error ? error.message : String(error));
     }
 
+    if (context.aborts.has(session.id)) {
+      return jsonError("session is already running", 409);
+    }
+
     const controller = new AbortController();
     context.aborts.set(session.id, controller);
     const onAbort = () => {
       controller.abort();
       denyPending(session.id);
-      context.aborts.delete(session.id);
+      if (context.aborts.get(session.id) === controller) {
+        context.aborts.delete(session.id);
+      }
     };
     c.req.raw.signal.addEventListener("abort", onAbort, { once: true });
 
@@ -521,7 +544,9 @@ export async function createHarnessApp(options: ServerOptions = {}): Promise<{
         });
       } finally {
         c.req.raw.signal.removeEventListener("abort", onAbort);
-        context.aborts.delete(session.id);
+        if (context.aborts.get(session.id) === controller) {
+          context.aborts.delete(session.id);
+        }
       }
     });
   });
@@ -531,6 +556,14 @@ export async function createHarnessApp(options: ServerOptions = {}): Promise<{
     context,
     config: loaded.config,
     close: () => {
+      for (const controller of context.aborts.values()) controller.abort();
+      for (const entry of context.pending.values()) {
+        clearTimeout(entry.timer);
+        entry.resolve("deny");
+      }
+      context.aborts.clear();
+      context.pending.clear();
+      context.agents.clear();
       for (const connection of mcpConnections) {
         void connection.close().catch(() => undefined);
       }
@@ -550,7 +583,8 @@ export async function startServer(
   const port = options.port ?? 4_096;
   const hostname = options.hostname ?? "127.0.0.1";
   const server = serve({ fetch: app.fetch, port, hostname });
-  const closeWebSocket = attachWebSocket(server, app, options.env?.HARNESS_TOKEN);
+  const env = options.env ?? process.env;
+  const closeWebSocket = attachWebSocket(server, app, env.HARNESS_TOKEN);
   await new Promise<void>((resolve) => {
     setImmediate(resolve);
   });
@@ -563,8 +597,13 @@ export async function startServer(
     close: async () => {
       closeWebSocket();
       close();
+      (server as { closeAllConnections?: () => void }).closeAllConnections?.();
       await new Promise<void>((resolve) => {
-        server.close(() => resolve());
+        const timer = setTimeout(() => resolve(), 2_000);
+        server.close(() => {
+          clearTimeout(timer);
+          resolve();
+        });
       });
     },
   };

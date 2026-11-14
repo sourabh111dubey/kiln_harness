@@ -7,7 +7,7 @@ import {
   readFileSync,
   writeFileSync,
 } from "node:fs";
-import { basename, dirname, join } from "node:path";
+import { basename, dirname, isAbsolute, join } from "node:path";
 
 export interface Checkpoint {
   hash: string;
@@ -83,8 +83,9 @@ export class CheckpointManager {
   }
 
   restore(sessionID: string, hash: string): number {
+    if (!/^[0-9a-f]{16}$/.test(hash)) return 0;
     const meta = readMeta(join(this.root(sessionID), hash));
-    if (!meta) return 0;
+    if (!meta || basename(meta.file) !== meta.file || !isAbsolute(meta.path)) return 0;
 
     try {
       mkdirSync(dirname(meta.path), { recursive: true });

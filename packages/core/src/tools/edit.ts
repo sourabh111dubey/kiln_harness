@@ -78,7 +78,7 @@ export const editTool: ToolDefinition<EditInput> = {
 
     const updated = input.replaceAll
       ? content.split(oldString).join(input.newString)
-      : content.replace(oldString, input.newString);
+      : content.replace(oldString, () => input.newString);
 
     await context.checkpoint?.(fullPath);
     await atomicWrite(fullPath, updated);

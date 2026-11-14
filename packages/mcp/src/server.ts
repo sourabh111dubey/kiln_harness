@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type { ToolDefinition, ToolOutput } from "@harness/shared";
 import { createLogger } from "@harness/shared";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -76,10 +77,31 @@ export async function createMcpHttpHandler(
   tools: ToolDefinition<unknown>[] = [],
   options: { allowDestructive?: boolean } = {},
 ): Promise<(request: Request) => Promise<Response>> {
-  const server = createMcpServer(tools, options);
-  const transport = new WebStandardStreamableHTTPServerTransport({
-    sessionIdGenerator: undefined,
-  });
-  await server.connect(transport);
-  return (request: Request) => transport.handleRequest(request);
+  const sessions = new Map<
+    string,
+    { server: McpServer; transport: WebStandardStreamableHTTPServerTransport }
+  >();
+
+  return async (request: Request) => {
+    const sessionID = request.headers.get("mcp-session-id");
+    const existing = sessionID ? sessions.get(sessionID) : undefined;
+    if (existing) return existing.transport.handleRequest(request);
+
+    const server = createMcpServer(tools, options);
+    const transport = new WebStandardStreamableHTTPServerTransport({
+      sessionIdGenerator: () => randomUUID(),
+      onsessioninitialized: (id: string) => {
+        sessions.set(id, { server, transport });
+      },
+    });
+
+    transport.onclose = () => {
+      const id = transport.sessionId;
+      if (id) sessions.delete(id);
+      void server.close();
+    };
+
+    await server.connect(transport);
+    return transport.handleRequest(request);
+  };
 }

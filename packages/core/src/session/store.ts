@@ -7,7 +7,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { homedir } from "node:os";
-import { join, resolve } from "node:path";
+import { basename, join, resolve } from "node:path";
 import {
   type ChatMessage,
   emptyUsage,
@@ -15,6 +15,7 @@ import {
   type HarnessEvent,
   harnessEventSchema,
   ids,
+  isPrefixedId,
   type Session,
   toHarnessError,
 } from "@harness/shared";
@@ -117,6 +118,7 @@ export class SessionStore {
         created_at TEXT NOT NULL
       );
       CREATE INDEX IF NOT EXISTS idx_messages_session ON messages(session_id, seq);
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_messages_session_seq ON messages(session_id, seq);
       CREATE TABLE IF NOT EXISTS events (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         session_id TEXT NOT NULL,
@@ -239,19 +241,26 @@ export class SessionStore {
 
   appendMessage(sessionID: string, message: ChatMessage): void {
     const seq = this.nextSequence("messages", sessionID);
-    this.db
-      .prepare(
-        "INSERT INTO messages (id, session_id, seq, role, content, data, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-      )
-      .run(
-        ids.message(),
-        sessionID,
-        seq,
-        message.role,
-        message.content,
-        JSON.stringify(message),
-        now(),
-      );
+    this.db.exec("BEGIN");
+    try {
+      this.db
+        .prepare(
+          "INSERT INTO messages (id, session_id, seq, role, content, data, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        )
+        .run(
+          ids.message(),
+          sessionID,
+          seq,
+          message.role,
+          message.content,
+          JSON.stringify(message),
+          now(),
+        );
+      this.db.exec("COMMIT");
+    } catch (error) {
+      this.db.exec("ROLLBACK");
+      throw error;
+    }
   }
 
   readMessages(sessionID: string): ChatMessage[] {
@@ -262,25 +271,35 @@ export class SessionStore {
   }
 
   replaceMessages(sessionID: string, messages: ChatMessage[]): void {
-    this.db.prepare("DELETE FROM messages WHERE session_id = ?").run(sessionID);
-    messages.forEach((message, index) => {
-      this.db
-        .prepare(
-          "INSERT INTO messages (id, session_id, seq, role, content, data, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        )
-        .run(
-          ids.message(),
-          sessionID,
-          index + 1,
-          message.role,
-          message.content,
-          JSON.stringify(message),
-          now(),
-        );
-    });
+    this.db.exec("BEGIN");
+    try {
+      this.db.prepare("DELETE FROM messages WHERE session_id = ?").run(sessionID);
+      messages.forEach((message, index) => {
+        this.db
+          .prepare(
+            "INSERT INTO messages (id, session_id, seq, role, content, data, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+          )
+          .run(
+            ids.message(),
+            sessionID,
+            index + 1,
+            message.role,
+            message.content,
+            JSON.stringify(message),
+            now(),
+          );
+      });
+      this.db.exec("COMMIT");
+    } catch (error) {
+      this.db.exec("ROLLBACK");
+      throw error;
+    }
   }
 
   appendEvent(sessionID: string, event: HarnessEvent): void {
+    if (!isPrefixedId(sessionID, "ses")) {
+      throw new HarnessError("invalid_argument", `Invalid session id: ${sessionID}`);
+    }
     const seq = this.nextSequence("events", sessionID);
     this.db
       .prepare(
@@ -431,7 +450,11 @@ export function readSessionFile(
   sessionID: string,
   filename: string,
 ): string | undefined {
-  const path = join(store.sessionDirectory(sessionID), filename);
+  const safeName = basename(filename);
+  if (safeName !== filename || safeName === "." || safeName === "..") {
+    throw new HarnessError("invalid_argument", `Invalid session file name: ${filename}`);
+  }
+  const path = join(store.sessionDirectory(sessionID), safeName);
   if (!existsSync(path)) return undefined;
   return readFileSync(path, "utf8");
 }
@@ -442,7 +465,11 @@ export function writeSessionFile(
   filename: string,
   contents: string,
 ): void {
+  const safeName = basename(filename);
+  if (safeName !== filename || safeName === "." || safeName === "..") {
+    throw new HarnessError("invalid_argument", `Invalid session file name: ${filename}`);
+  }
   const directory = store.sessionDirectory(sessionID);
   mkdirSync(directory, { recursive: true });
-  writeFileSync(join(directory, filename), contents, "utf8");
+  writeFileSync(join(directory, safeName), contents, "utf8");
 }

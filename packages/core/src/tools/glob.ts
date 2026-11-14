@@ -1,3 +1,4 @@
+import { isAbsolute, resolve } from "node:path";
 import type { ToolDefinition } from "@harness/shared";
 import { glob } from "tinyglobby";
 import { z } from "zod";
@@ -29,6 +30,13 @@ export const globTool: ToolDefinition<GlobInput> = {
     assertInsideWorkspace(context.cwd, root);
     await assertRealInside(context.cwd, root);
 
+    if (isAbsolute(input.pattern) || input.pattern.split(/[\\/]/).includes("..")) {
+      return {
+        kind: "text",
+        text: "Glob pattern must be relative and cannot contain '..' segments.",
+      };
+    }
+
     const files = await glob(input.pattern, {
       cwd: root,
       ignore: GLOB_IGNORE,
@@ -37,7 +45,18 @@ export const globTool: ToolDefinition<GlobInput> = {
       followSymbolicLinks: false,
     });
 
-    const sorted = files.sort((left, right) => left.localeCompare(right));
+    const safeFiles: string[] = [];
+    for (const file of files) {
+      const fullPath = resolve(root, file);
+      try {
+        await assertRealInside(root, fullPath);
+        safeFiles.push(file);
+      } catch {
+        // Ignore symlinks that escape the workspace.
+      }
+    }
+
+    const sorted = safeFiles.sort((left, right) => left.localeCompare(right));
     const limited = sorted.slice(0, 200);
     const result = truncateText(limited.join("\n"), 30_000);
     const notice =

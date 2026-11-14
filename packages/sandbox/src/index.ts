@@ -1,4 +1,6 @@
-import type { SandboxAdapter, SandboxCommand } from "@harness/shared";
+import { homedir, tmpdir } from "node:os";
+import { isAbsolute, parse, relative, resolve } from "node:path";
+import { HarnessError, type SandboxAdapter, type SandboxCommand } from "@harness/shared";
 
 export interface SandboxOptions {
   workspace: string;
@@ -32,6 +34,16 @@ export class LinuxBubblewrapSandbox implements SandboxAdapter {
         workspace,
         "--chdir",
         cwd,
+        "--clearenv",
+        "--setenv",
+        "PATH",
+        process.env.PATH ?? "/usr/local/bin:/usr/bin:/bin",
+        "--setenv",
+        "LANG",
+        process.env.LANG ?? "C.UTF-8",
+        "--setenv",
+        "TERM",
+        process.env.TERM ?? "xterm-256color",
         "--setenv",
         "HOME",
         "/tmp",
@@ -52,11 +64,12 @@ export class LinuxBubblewrapSandbox implements SandboxAdapter {
 }
 
 function seatbeltProfile(workspace: string, network: boolean): string {
+  const escaped = workspace.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
   const lines = [
     "(version 1)",
     "(allow default)",
     "(deny file-write*)",
-    `(allow file-write* (subpath "${workspace}"))`,
+    `(allow file-write* (subpath "${escaped}"))`,
     '(allow file-write* (subpath "/tmp"))',
     "(allow process-exec)",
     "(allow process-fork)",
@@ -78,7 +91,10 @@ export class MacSeatbeltSandbox implements SandboxAdapter {
         seatbeltProfile(this.options.workspace, this.options.network ?? false),
         "/bin/bash",
         "-c",
-        `cd ${JSON.stringify(options.cwd ?? this.options.workspace)} && ${command}`,
+        'cd "$1" && exec /bin/bash -c "$2"',
+        "harness",
+        options.cwd ?? this.options.workspace,
+        command,
       ],
     };
   }
@@ -106,7 +122,16 @@ export class DockerSandbox implements SandboxAdapter {
 
   constructor(private readonly options: SandboxOptions) {}
 
-  wrap(command: string): SandboxCommand {
+  wrap(command: string, options: { cwd?: string } = {}): SandboxCommand {
+    const relativeCwd = options.cwd ? relative(this.options.workspace, options.cwd) : "";
+    if (relativeCwd.startsWith("..") || isAbsolute(relativeCwd)) {
+      throw new HarnessError(
+        "permission_denied",
+        `Docker sandbox cwd ${options.cwd} is outside ${this.options.workspace}`,
+      );
+    }
+    const workdir = relativeCwd ? `/work/${relativeCwd}` : "/work";
+
     return {
       command: "docker",
       args: [
@@ -119,10 +144,16 @@ export class DockerSandbox implements SandboxAdapter {
         "ALL",
         "--security-opt",
         "no-new-privileges",
+        "--memory",
+        "2g",
+        "--cpus",
+        "2",
+        "--pids-limit",
+        "256",
         "-v",
         `${this.options.workspace}:/work`,
         "-w",
-        "/work",
+        workdir,
         this.options.image ?? "node:24-slim",
         "bash",
         "-c",
@@ -133,6 +164,14 @@ export class DockerSandbox implements SandboxAdapter {
 }
 
 export function createSandbox(options: SandboxOptions): SandboxAdapter {
+  const resolved = resolve(options.workspace);
+  if (resolved === homedir() || resolved === tmpdir() || parse(resolved).root === resolved) {
+    throw new HarnessError(
+      "invalid_argument",
+      `Refusing to sandbox filesystem root/home/tmp: ${options.workspace}`,
+    );
+  }
+
   const platform = options.platform ?? process.platform;
   if (platform === "linux") return new LinuxBubblewrapSandbox(options);
   if (platform === "darwin") return new MacSeatbeltSandbox(options);

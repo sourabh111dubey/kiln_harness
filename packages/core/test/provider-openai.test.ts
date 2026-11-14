@@ -120,6 +120,26 @@ describe("openai-compatible provider", () => {
     expect(events).toContainEqual({ type: "tool-call-end", callID: "call_1" });
   });
 
+  it("forwards custom provider headers", async () => {
+    const fetchMock = stubFetch(
+      sseResponse(['data: {"choices":[{"delta":{"content":"ok"}}]}\n\n']),
+    );
+    await collect(
+      new OpenAIProvider({
+        id: "openrouter",
+        apiKey: "test",
+        baseURL: "https://openrouter.ai/api/v1",
+        headers: { "HTTP-Referer": "https://harness.dev", "X-Title": "harness" },
+      }).stream(request),
+    );
+
+    const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    const headers = new Headers(init.headers);
+    expect(headers.get("authorization")).toBe("Bearer test");
+    expect(headers.get("http-referer")).toBe("https://harness.dev");
+    expect(headers.get("x-title")).toBe("harness");
+  });
+
   it("throws a provider error on HTTP failure", async () => {
     stubFetch(new Response("unauthorized", { status: 401 }));
     await expect(

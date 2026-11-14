@@ -14,6 +14,7 @@ export interface OpenAIOptions {
   id: string;
   apiKey?: string;
   baseURL: string;
+  headers?: Record<string, string>;
 }
 
 interface OpenAIToolCallDelta {
@@ -92,7 +93,10 @@ export class OpenAIProvider implements ProviderAdapter {
   }
 
   private headers(): Record<string, string> {
-    const headers: Record<string, string> = { "content-type": "application/json" };
+    const headers: Record<string, string> = {
+      "content-type": "application/json",
+      ...this.options.headers,
+    };
     if (this.options.apiKey) headers.authorization = `Bearer ${this.options.apiKey}`;
     return headers;
   }
@@ -133,7 +137,13 @@ export class OpenAIProvider implements ProviderAdapter {
             tool_choice: "auto",
           }
         : {}),
-      ...(request.maxTokens !== undefined ? { max_tokens: request.maxTokens } : {}),
+      ...(request.maxTokens !== undefined
+        ? {
+            [/^(gpt-5|o1|o3|o4)/.test(request.model.toLowerCase())
+              ? "max_completion_tokens"
+              : "max_tokens"]: request.maxTokens,
+          }
+        : {}),
       ...(request.temperature !== undefined ? { temperature: request.temperature } : {}),
     };
 

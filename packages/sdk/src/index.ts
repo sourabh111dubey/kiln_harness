@@ -61,13 +61,15 @@ export interface PromptOptions {
 export class Harness {
   readonly store: SessionStore;
   private readonly registry: ProviderRegistry;
-  private readonly tools: ToolRegistry;
+  private tools: ToolRegistry;
   private readonly env: NodeJS.ProcessEnv;
   private readonly cwd: string;
   private readonly logger: Logger;
   private readonly audit: AuditLog;
   private readonly checkpoints: CheckpointManager;
   private readonly agents = new Map<string, Agent>();
+  private readonly running = new Set<string>();
+  private readonly lspManagers = new Set<LspManager>();
   private configPromise: Promise<HarnessConfig>;
   private pluginsPromise: Promise<PluginHost | undefined>;
 
@@ -131,11 +133,20 @@ export class Harness {
       });
     }
 
+    if (this.running.has(sessionID)) {
+      throw new HarnessError("invalid_argument", `Session ${sessionID} is already running`);
+    }
+    this.running.add(sessionID);
+
     const agent = await this.getAgent(session, options.model, options.permissionMode);
-    return agent.prompt(prompt, {
-      onEvent: options.onEvent,
-      signal: options.signal,
-    });
+    try {
+      return await agent.prompt(prompt, {
+        onEvent: options.onEvent,
+        signal: options.signal,
+      });
+    } finally {
+      this.running.delete(sessionID);
+    }
   }
 
   listSessions(filter: { cwd?: string; limit?: number } = {}): Session[] {
@@ -162,6 +173,10 @@ export class Harness {
   }
 
   close(): void {
+    for (const lsp of this.lspManagers) void lsp.close().catch(() => undefined);
+    this.lspManagers.clear();
+    this.agents.clear();
+    this.running.clear();
     this.store.close();
   }
 
@@ -169,6 +184,10 @@ export class Harness {
     const loaded = await loadConfig({ cwd: this.cwd, env: this.env });
     this.configPromise = Promise.resolve(loaded.config);
     this.agents.clear();
+    this.running.clear();
+    for (const lsp of this.lspManagers) void lsp.close().catch(() => undefined);
+    this.lspManagers.clear();
+    this.tools = createDefaultToolRegistry();
 
     const plugins = await loadPlugins(loaded.config.plugins, {
       cwd: this.cwd,
@@ -212,7 +231,10 @@ export class Harness {
     const mode = permissionMode ?? session.permissions ?? config.permissions.default;
     const key = `${session.id}:${modelRef}:${mode}`;
     const existing = this.agents.get(key);
-    if (existing) return existing;
+    if (existing) {
+      existing.replaceMessages(this.store.readMessages(session.id));
+      return existing;
+    }
 
     const plugins = await this.pluginsPromise;
     if (plugins) {
@@ -231,6 +253,9 @@ export class Harness {
         return "deny" as PermissionDecision;
       });
 
+    const lsp = new LspManager(config.lsp.servers as Record<string, LspServerConfig>, session.cwd);
+    this.lspManagers.add(lsp);
+
     const agent = new Agent({
       cwd: session.cwd,
       provider,
@@ -248,7 +273,7 @@ export class Harness {
       sandbox: config.sandbox.enabled
         ? createSandbox({ workspace: session.cwd, network: config.sandbox.network })
         : undefined,
-      lsp: new LspManager(config.lsp.servers as Record<string, LspServerConfig>, session.cwd),
+      lsp,
     });
 
     this.agents.set(key, agent);

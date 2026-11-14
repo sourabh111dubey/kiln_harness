@@ -54,7 +54,10 @@ describe("MCP conversion", () => {
     });
 
     expect(tool.id).toBe("mcp_demo_echo");
-    expect(tool.readOnly).toBe(true);
+    expect(tool.readOnly).toBe(false);
+    expect(tool.parallelizable).toBe(false);
+    expect(tool.defaultDecision).toBe("ask");
+    expect(tool.description).toContain("read-only");
     expect(tool.parametersOverride).toEqual({
       type: "object",
       properties: { text: { type: "string" } },

@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
-import { join } from "node:path";
-import type { Agent, TurnResult } from "@harness/core";
+import { resolve } from "node:path";
+import { type Agent, isPathInside, type TurnResult } from "@harness/core";
 
 export interface EvalTask {
   id: string;
@@ -29,8 +29,13 @@ export interface ScoreSummary {
 export async function checkExpectedFiles(task: EvalTask, cwd: string): Promise<string[]> {
   const failures: string[] = [];
   for (const [path, expected] of Object.entries(task.expectedFiles ?? {})) {
+    const fullPath = resolve(cwd, path);
+    if (!isPathInside(cwd, fullPath)) {
+      failures.push(`${path}: outside eval workspace`);
+      continue;
+    }
     try {
-      const actual = await readFile(join(cwd, path), "utf8");
+      const actual = await readFile(fullPath, "utf8");
       if (actual !== expected) failures.push(`${path}: content mismatch`);
     } catch {
       failures.push(`${path}: missing`);
@@ -40,16 +45,41 @@ export async function checkExpectedFiles(task: EvalTask, cwd: string): Promise<s
 }
 
 export async function runEvalTask(task: EvalTask, agent: Agent, cwd: string): Promise<TaskResult> {
-  const result = await agent.prompt(task.prompt);
-  const failures = await checkExpectedFiles(task, cwd);
-  return {
-    id: task.id,
-    passed: failures.length === 0,
-    failures,
-    text: result.text,
-    cost: result.cost,
-    usage: result.usage,
-  };
+  const emptyUsage = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 };
+  const criteria = Object.keys(task.expectedFiles ?? {}).length;
+
+  if (criteria === 0) {
+    return {
+      id: task.id,
+      passed: false,
+      failures: ["no scoring criteria (expectedFiles is empty)"],
+      text: "",
+      cost: 0,
+      usage: emptyUsage,
+    };
+  }
+
+  try {
+    const result = await agent.prompt(task.prompt);
+    const failures = await checkExpectedFiles(task, cwd);
+    return {
+      id: task.id,
+      passed: failures.length === 0,
+      failures,
+      text: result.text,
+      cost: result.cost,
+      usage: result.usage,
+    };
+  } catch (error) {
+    return {
+      id: task.id,
+      passed: false,
+      failures: [`agent failed: ${error instanceof Error ? error.message : String(error)}`],
+      text: "",
+      cost: 0,
+      usage: emptyUsage,
+    };
+  }
 }
 
 export function scoreResults(results: TaskResult[]): ScoreSummary {

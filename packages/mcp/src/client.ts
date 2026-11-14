@@ -54,6 +54,8 @@ export function mcpResultToOutput(result: {
     return { kind: "text", text: text || "MCP tool reported an error." };
   }
 
+  if (text.length > 0) return { kind: "text", text };
+
   const image = content.find((entry) => entry.type === "image" && entry.data);
   if (image?.data) {
     return {
@@ -63,7 +65,6 @@ export function mcpResultToOutput(result: {
     };
   }
 
-  if (text.length > 0) return { kind: "text", text };
   return { kind: "json", value: result };
 }
 
@@ -73,22 +74,25 @@ export function toolFromMcpTool(
   tool: McpTool,
 ): ToolDefinition<Record<string, unknown>> {
   const input = z.record(z.string(), z.unknown());
-  const readOnly = tool.annotations?.readOnlyHint === true;
 
   return {
     id: `mcp_${serverName}_${tool.name}`,
-    description: tool.description ?? `MCP tool ${tool.name} from ${serverName}`,
+    description: `${tool.description ?? `MCP tool ${tool.name} from ${serverName}`}${tool.annotations?.readOnlyHint ? " (read-only)" : ""}`,
     input,
     parametersOverride: tool.inputSchema,
-    readOnly,
-    parallelizable: readOnly,
-    defaultDecision: readOnly ? "allow" : "ask",
+    readOnly: false,
+    parallelizable: false,
+    defaultDecision: "ask",
     timeoutMs: 120_000,
-    execute: async (args) => {
-      const result = await client.callTool({
-        name: tool.name,
-        arguments: args,
-      });
+    execute: async (args, context) => {
+      const result = await client.callTool(
+        {
+          name: tool.name,
+          arguments: args,
+        },
+        undefined,
+        { signal: context.signal, timeout: 120_000 },
+      );
       return mcpResultToOutput(result as unknown as { content?: McpContent[]; isError?: boolean });
     },
   };
@@ -100,6 +104,23 @@ export async function connectMcpServer(
   options: { logger?: { warn: (payload: unknown, message?: string) => void } } = {},
 ): Promise<McpConnection> {
   const client = new Client({ name: "harness", version: "0.0.0" });
+  const env: Record<string, string> = {};
+  for (const key of [
+    "PATH",
+    "HOME",
+    "TMPDIR",
+    "LANG",
+    "LC_ALL",
+    "TERM",
+    "USER",
+    "SHELL",
+    "NODE_PATH",
+  ]) {
+    const value = process.env[key];
+    if (value !== undefined) env[key] = value;
+  }
+  Object.assign(env, "command" in config ? (config.env ?? {}) : {});
+
   const transport =
     "url" in config
       ? new StreamableHTTPClientTransport(
@@ -109,12 +130,14 @@ export async function connectMcpServer(
       : new StdioClientTransport({
           command: config.command,
           args: config.args ?? [],
-          env: { ...process.env, ...config.env } as Record<string, string>,
+          env,
           stderr: "pipe",
         });
 
   try {
     await client.connect(transport);
+    const stderr = (transport as { stderr?: { resume?: () => void } }).stderr;
+    stderr?.resume?.();
     const listed = await client.listTools();
     const tools = listed.tools.map((tool) => toolFromMcpTool(name, client, tool as McpTool));
     return {

@@ -13,11 +13,30 @@ export type BashInput = z.infer<typeof bashInput>;
 
 const OUTPUT_LIMIT = 30_000;
 
+const ALLOWED_ENV = new Set([
+  "PATH",
+  "HOME",
+  "TMPDIR",
+  "LANG",
+  "LC_ALL",
+  "TERM",
+  "USER",
+  "LOGNAME",
+  "SHELL",
+  "PWD",
+  "SHLVL",
+  "NODE_PATH",
+]);
+
 function sanitizedEnvironment(): NodeJS.ProcessEnv {
+  const extra = (process.env.HARNESS_PASS_ENV ?? "")
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0);
   const environment: NodeJS.ProcessEnv = {};
   for (const [key, value] of Object.entries(process.env)) {
     if (value === undefined) continue;
-    if (/API_KEY|TOKEN|SECRET|PASSWORD/i.test(key)) continue;
+    if (!ALLOWED_ENV.has(key) && !extra.includes(key)) continue;
     environment[key] = value;
   }
   return environment;

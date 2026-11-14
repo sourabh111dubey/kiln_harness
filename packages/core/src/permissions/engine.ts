@@ -11,6 +11,7 @@ export interface PermissionEngineOptions {
   mode: PermissionMode;
   cwd: string;
   rules?: PermissionRule[];
+  isReadOnly?: (tool: string) => boolean;
 }
 
 const READ_ONLY_TOOLS = new Set([
@@ -88,25 +89,29 @@ function matchesRuleInput(rule: PermissionRule, input: unknown): boolean {
 }
 
 export class PermissionEngine {
-  constructor(private readonly options: PermissionEngineOptions) {}
+  private readonly rules: PermissionRule[];
+
+  constructor(private readonly options: PermissionEngineOptions) {
+    this.rules = [...(options.rules ?? [])];
+  }
 
   get mode(): PermissionMode {
     return this.options.mode;
   }
 
   addRule(rule: PermissionRule): void {
-    if (!this.options.rules) this.options.rules = [];
-    this.options.rules.push(rule);
+    this.rules.push(rule);
   }
 
   decide(request: PermissionRequest): PermissionDecision {
-    const matchingRules = (this.options.rules ?? []).filter((rule) => {
+    const matchingRules = this.rules.filter((rule) => {
       if (rule.tool !== "*" && rule.tool !== request.tool) return false;
       if (!rule.pattern) return true;
       return matchesRuleInput(rule, request.input);
     });
 
     if (matchingRules.some((rule) => rule.decision === "deny")) return "deny";
+    if (matchingRules.some((rule) => rule.decision === "ask")) return "ask";
     const allow = matchingRules.find((rule) => rule.decision === "allow");
     if (allow) return "allow";
 
@@ -118,7 +123,8 @@ export class PermissionEngine {
       }
     }
 
-    if (READ_ONLY_TOOLS.has(request.tool)) return "allow";
+    const isReadOnly = this.options.isReadOnly?.(request.tool) ?? READ_ONLY_TOOLS.has(request.tool);
+    if (isReadOnly) return "allow";
     if (this.options.mode === "plan") return "deny";
 
     if (this.options.mode === "acceptEdits" && WRITE_TOOLS.has(request.tool)) {

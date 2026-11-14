@@ -1,6 +1,38 @@
 import type { ModelInfo } from "@harness/shared";
 
 export const MODEL_CATALOG: Record<string, ModelInfo> = {
+  "openrouter/anthropic/claude-sonnet-4.5": {
+    id: "anthropic/claude-sonnet-4.5",
+    provider: "openrouter",
+    name: "Claude Sonnet 4.5 (OpenRouter)",
+    contextWindow: 200_000,
+    maxOutput: 64_000,
+    pricing: { input: 3, output: 15, cacheRead: 0.3, cacheWrite: 3.75 },
+    capabilities: {
+      tools: true,
+      vision: true,
+      reasoning: true,
+      promptCache: true,
+      streaming: true,
+      maxContext: 200_000,
+    },
+  },
+  "openrouter/anthropic/claude-haiku-4.5": {
+    id: "anthropic/claude-haiku-4.5",
+    provider: "openrouter",
+    name: "Claude Haiku 4.5 (OpenRouter)",
+    contextWindow: 200_000,
+    maxOutput: 64_000,
+    pricing: { input: 1, output: 5, cacheRead: 0.1, cacheWrite: 1.25 },
+    capabilities: {
+      tools: true,
+      vision: true,
+      reasoning: true,
+      promptCache: true,
+      streaming: true,
+      maxContext: 200_000,
+    },
+  },
   "anthropic/claude-sonnet-4-5": {
     id: "claude-sonnet-4-5",
     provider: "anthropic",

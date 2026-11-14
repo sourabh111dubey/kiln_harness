@@ -95,9 +95,11 @@ export function HarnessApp(options: HarnessTuiOptions): React.ReactNode {
   const [showSessions, setShowSessions] = useState(false);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [history, setHistory] = useState<string[]>([]);
+  const [modelOverride, setModelOverride] = useState(options.model);
 
   const agentRef = useRef<Agent | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const lspRef = useRef<LspManager | null>(null);
   const permissionResolve = useRef<((decision: PermissionDecision) => void) | null>(null);
   const initialPrompt = useRef(options.initialPrompt);
 
@@ -119,7 +121,10 @@ export function HarnessApp(options: HarnessTuiOptions): React.ReactNode {
     (existing?: Session): Agent | null => {
       if (!config) return null;
 
-      const modelRef = options.model ?? existing?.model ?? config.model ?? env.HARNESS_MODEL;
+      abortRef.current?.abort();
+      abortRef.current = null;
+
+      const modelRef = modelOverride ?? existing?.model ?? config.model ?? env.HARNESS_MODEL;
       if (!modelRef) {
         addInfo("No model configured. Use /model <provider/model> or set model in config.");
         return null;
@@ -141,6 +146,10 @@ export function HarnessApp(options: HarnessTuiOptions): React.ReactNode {
         rules: config.permissions.rules,
       });
 
+      const lsp = new LspManager(config.lsp.servers as Record<string, LspServerConfig>, agentCwd);
+      void lspRef.current?.close();
+      lspRef.current = lsp;
+
       const next = new Agent({
         cwd: agentCwd,
         provider,
@@ -157,7 +166,7 @@ export function HarnessApp(options: HarnessTuiOptions): React.ReactNode {
         sandbox: config.sandbox.enabled
           ? createSandbox({ workspace: agentCwd, network: config.sandbox.network })
           : undefined,
-        lsp: new LspManager(config.lsp.servers as Record<string, LspServerConfig>, agentCwd),
+        lsp,
       });
 
       setAgent(next);
@@ -173,8 +182,8 @@ export function HarnessApp(options: HarnessTuiOptions): React.ReactNode {
       cwd,
       env,
       logger,
+      modelOverride,
       options.agent,
-      options.model,
       options.permissionMode,
       options.tools,
       registry,
@@ -284,9 +293,11 @@ export function HarnessApp(options: HarnessTuiOptions): React.ReactNode {
       } catch {
         // The error event is already in the transcript.
       } finally {
-        abortRef.current = null;
+        if (abortRef.current === controller) abortRef.current = null;
         setStatus((currentStatus) =>
-          currentStatus === "waiting_permission" ? currentStatus : "idle",
+          currentStatus === "error" || currentStatus === "waiting_permission"
+            ? currentStatus
+            : "idle",
         );
         const latest = agentRef.current;
         if (latest) setSession(latest.getSession());
@@ -309,21 +320,40 @@ export function HarnessApp(options: HarnessTuiOptions): React.ReactNode {
     [addInfo, createAgent, store],
   );
 
+  const handleExit = useCallback(() => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    void lspRef.current?.close();
+    lspRef.current = null;
+    store.close();
+    exit();
+  }, [exit, store]);
+
   const runCommand = useCallback(
     async (input: string) => {
       const [command, ...args] = input.slice(1).split(/\s+/);
       const current = agentRef.current;
 
+      if (
+        (status === "running" || status === "waiting_permission") &&
+        !["help", "cost", "context", "exit"].includes(command ?? "")
+      ) {
+        addInfo("Wait for the current turn to finish.");
+        return;
+      }
+
       switch (command) {
         case "help":
           addInfo(HELP);
           break;
-        case "clear":
-          setEntries([]);
+        case "clear": {
+          const next = createAgent();
+          if (next) setEntries([]);
           break;
+        }
         case "exit":
         case "quit":
-          exit();
+          handleExit();
           break;
         case "new": {
           const next = createAgent();
@@ -334,7 +364,7 @@ export function HarnessApp(options: HarnessTuiOptions): React.ReactNode {
           break;
         }
         case "sessions":
-          setSessions(store.list({ limit: 50 }));
+          setSessions(store.list({ cwd, limit: 50 }));
           setShowSessions(true);
           break;
         case "compact":
@@ -363,6 +393,7 @@ export function HarnessApp(options: HarnessTuiOptions): React.ReactNode {
             break;
           }
           if (!current) break;
+          setModelOverride(ref);
           store.update(current.id, { model: ref });
           const next = createAgent({ ...current.getSession(), model: ref });
           if (next) addInfo(`Model set to ${ref}.`);
@@ -380,18 +411,20 @@ export function HarnessApp(options: HarnessTuiOptions): React.ReactNode {
           addInfo(`Unknown command: /${command}. Try /help.`);
       }
     },
-    [addInfo, createAgent, exit, store],
+    [addInfo, createAgent, cwd, handleExit, status, store],
   );
 
   const send = useCallback(
     (text: string) => {
       if (text.startsWith("/")) {
-        void runCommand(text);
+        void runCommand(text).catch((error: unknown) => {
+          addInfo(`Command failed: ${error instanceof Error ? error.message : String(error)}`);
+        });
         return;
       }
       void submitPrompt(text);
     },
-    [runCommand, submitPrompt],
+    [addInfo, runCommand, submitPrompt],
   );
 
   const resolvePermission = useCallback((decision: PermissionDecision) => {
@@ -404,14 +437,19 @@ export function HarnessApp(options: HarnessTuiOptions): React.ReactNode {
 
   const alwaysAllow = useCallback(() => {
     const request = permissionRequest;
-    if (request && agentRef.current) {
-      agentRef.current.getPermissions().addRule({
-        tool: request.tool,
-        decision: "allow",
-        scope: "session",
-      });
+    try {
+      if (request && agentRef.current) {
+        agentRef.current.getPermissions().addRule({
+          tool: request.tool,
+          decision: "allow",
+          scope: "session",
+        });
+      }
+    } catch {
+      // Permission resolution must not get stuck on a bad rule.
+    } finally {
+      resolvePermission("allow");
     }
-    resolvePermission("allow");
   }, [permissionRequest, resolvePermission]);
 
   useEffect(() => {
@@ -503,7 +541,7 @@ export function HarnessApp(options: HarnessTuiOptions): React.ReactNode {
         history={history}
         onSubmit={send}
         onInterrupt={() => abortRef.current?.abort()}
-        onExit={() => exit()}
+        onExit={handleExit}
       />
     </Box>
   );

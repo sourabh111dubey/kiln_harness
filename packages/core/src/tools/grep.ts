@@ -1,5 +1,5 @@
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { readFile, stat } from "node:fs/promises";
+import { basename, join } from "node:path";
 import type { ToolDefinition } from "@harness/shared";
 import { z } from "zod";
 import {
@@ -60,12 +60,27 @@ export const grepTool: ToolDefinition<GrepInput> = {
     const matches: string[] = [];
     let total = 0;
 
-    for await (const relativePath of walkFiles(root)) {
-      if (input.glob && !matchesGlob(relativePath, input.glob)) continue;
+    const targets: Array<{ full: string; relative: string }> = [];
+    const rootInfo = await stat(root).catch(() => undefined);
 
+    if (rootInfo?.isFile()) {
+      const relative = input.path ?? basename(root);
+      if (!input.glob || matchesGlob(relative, input.glob)) {
+        targets.push({ full: root, relative });
+      }
+    } else {
+      for await (const relativePath of walkFiles(root)) {
+        if (input.glob && !matchesGlob(relativePath, input.glob)) continue;
+        targets.push({ full: join(root, relativePath), relative: relativePath });
+      }
+    }
+
+    for (const target of targets) {
       let content: string;
       try {
-        const buffer = await readFile(join(root, relativePath));
+        const info = await stat(target.full);
+        if (info.size > 2_000_000) continue;
+        const buffer = await readFile(target.full);
         if (isBinary(buffer)) continue;
         content = buffer.toString("utf8");
       } catch {
@@ -86,7 +101,7 @@ export const grepTool: ToolDefinition<GrepInput> = {
           const current = lines[cursor];
           if (current === undefined) continue;
           const marker = cursor === index ? ":" : "-";
-          matches.push(`${relativePath}${marker}${cursor + 1}${marker}${current}`);
+          matches.push(`${target.relative}${marker}${cursor + 1}${marker}${current}`);
         }
         if (contextLines > 0) matches.push("--");
       }

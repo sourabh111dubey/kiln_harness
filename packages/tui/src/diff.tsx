@@ -15,17 +15,19 @@ export function parseDiff(diff: string): DiffLine[] {
   const result: DiffLine[] = [];
   let oldLine = 0;
   let newLine = 0;
+  let inHunk = false;
 
   for (const line of lines) {
     const hunk = /^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@/.exec(line);
     if (hunk) {
       oldLine = Number(hunk[1] ?? 0);
       newLine = Number(hunk[2] ?? 0);
+      inHunk = true;
       result.push({ type: "meta", text: line });
       continue;
     }
 
-    if (line.startsWith("---") || line.startsWith("+++")) {
+    if (!inHunk && (line.startsWith("---") || line.startsWith("+++"))) {
       result.push({ type: "meta", text: line });
       continue;
     }

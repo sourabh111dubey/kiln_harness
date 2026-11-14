@@ -1,6 +1,6 @@
 import type { ToolDefinition } from "@harness/shared";
 import { z } from "zod";
-import { assertInsideWorkspace, resolveWorkspacePath } from "./common";
+import { assertInsideWorkspace, assertRealInside, resolveWorkspacePath } from "./common";
 
 const pathInput = z.object({
   path: z.string().min(1).describe("File path, relative to the workspace or absolute"),
@@ -41,6 +41,7 @@ export const lspDiagnosticsTool: ToolDefinition<z.infer<typeof pathInput>> = {
     }
     const fullPath = resolveWorkspacePath(context.cwd, input.path);
     assertInsideWorkspace(context.cwd, fullPath);
+    await assertRealInside(context.cwd, fullPath);
     try {
       const diagnostics = await context.lsp.diagnosticsFor(fullPath);
       return { kind: "text", text: formatDiagnostics(input.path, diagnostics) };
@@ -67,6 +68,7 @@ export const lspSymbolsTool: ToolDefinition<z.infer<typeof pathInput>> = {
     }
     const fullPath = resolveWorkspacePath(context.cwd, input.path);
     assertInsideWorkspace(context.cwd, fullPath);
+    await assertRealInside(context.cwd, fullPath);
     try {
       const symbols = await context.lsp.symbolsFor(fullPath);
       if (symbols.length === 0) return { kind: "text", text: `No symbols for ${input.path}.` };

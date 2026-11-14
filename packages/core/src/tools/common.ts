@@ -1,4 +1,4 @@
-import type { Dirent } from "node:fs";
+import { type Dirent, existsSync } from "node:fs";
 import { mkdir, readdir, readFile, realpath, rename, rm, stat, writeFile } from "node:fs/promises";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { HarnessError, type ToolOutput, toHarnessError } from "@harness/shared";
@@ -137,15 +137,23 @@ export async function atomicWrite(path: string, content: string): Promise<void> 
   try {
     await rename(temporary, path);
   } catch (error) {
-    await rm(temporary, { force: true });
     if (
       (error as NodeJS.ErrnoException).code === "EPERM" ||
       (error as NodeJS.ErrnoException).code === "EEXIST"
     ) {
-      await rm(path, { force: true });
-      await rename(temporary, path);
+      const backup = `${path}.harness-bak-${process.pid}-${Date.now()}`;
+      if (existsSync(path)) await rename(path, backup);
+      try {
+        await rename(temporary, path);
+      } catch (renameError) {
+        if (existsSync(backup)) await rename(backup, path);
+        await rm(temporary, { force: true });
+        throw renameError;
+      }
+      await rm(backup, { force: true });
       return;
     }
+    await rm(temporary, { force: true });
     throw error;
   }
 }
@@ -190,12 +198,16 @@ export async function* walkFiles(
 }
 
 export function globToRegExp(pattern: string): RegExp {
+  const globstar = "__GLOBSTAR__";
+  const globstarSlash = "__GLOBSTAR_SLASH__";
   const escaped = pattern
-    .replace(/\*\*/g, "__GLOBSTAR__")
+    .replace(/\*\*\//g, globstarSlash)
+    .replace(/\*\*/g, globstar)
     .replace(/[.+^${}()|[\]\\]/g, "\\$&")
     .replace(/\*/g, "[^/]*")
     .replace(/\?/g, ".")
-    .replace(/__GLOBSTAR__/g, ".*");
+    .replace(new RegExp(globstarSlash, "g"), "(?:.*/)?")
+    .replace(new RegExp(globstar, "g"), ".*");
   return new RegExp(`^${escaped}$`);
 }
 
