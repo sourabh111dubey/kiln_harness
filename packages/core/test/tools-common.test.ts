@@ -1,6 +1,6 @@
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   assertInsideWorkspace,
@@ -36,10 +36,12 @@ afterEach(async () => {
 describe("tool utilities", () => {
   it("resolves and confines paths", () => {
     const cwd = "/tmp/workspace";
-    expect(resolveWorkspacePath(cwd, "src/a.ts")).toBe("/tmp/workspace/src/a.ts");
-    expect(isPathInside(cwd, "/tmp/workspace/src")).toBe(true);
-    expect(isPathInside(cwd, "/tmp/other")).toBe(false);
-    expect(() => assertInsideWorkspace(cwd, "/tmp/other")).toThrow("outside the workspace");
+    expect(resolveWorkspacePath(cwd, "src/a.ts")).toBe(resolve(cwd, "src/a.ts"));
+    expect(isPathInside(cwd, resolve(cwd, "src"))).toBe(true);
+    expect(isPathInside(cwd, resolve(cwd, "../other"))).toBe(false);
+    expect(() => assertInsideWorkspace(cwd, resolve(cwd, "../other"))).toThrow(
+      "outside the workspace",
+    );
   });
 
   it("formats line numbers and truncates output", () => {

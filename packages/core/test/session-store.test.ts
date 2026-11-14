@@ -1,6 +1,6 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import type { ChatMessage, KilncraftEvent } from "@kilncraft/shared";
 import { afterEach, describe, expect, it } from "vitest";
 import { SessionStore } from "../src/session/store";
@@ -33,22 +33,22 @@ const assistantMessage: ChatMessage = { role: "assistant", content: "hi" };
 describe("session store", () => {
   it("creates, reads, updates, and lists sessions", async () => {
     const store = makeStore(await tempDir());
-    const session = store.create({ cwd: "/tmp/project", model: "fake/test" });
+    const session = store.create({ cwd: resolve("/tmp/project"), model: "fake/test" });
 
     expect(session.id).toMatch(/^ses_/);
     expect(session.title).toBe("project");
     expect(session.status).toBe("idle");
-    expect(store.get(session.id)?.cwd).toBe("/tmp/project");
+    expect(store.get(session.id)?.cwd).toBe(resolve("/tmp/project"));
 
     const updated = store.update(session.id, { title: "Renamed", status: "running" });
     expect(updated?.title).toBe("Renamed");
     expect(updated?.status).toBe("running");
-    expect(store.list({ cwd: "/tmp/project" })).toHaveLength(1);
+    expect(store.list({ cwd: resolve("/tmp/project") })).toHaveLength(1);
   });
 
   it("persists messages and events", async () => {
     const store = makeStore(await tempDir());
-    const session = store.create({ cwd: "/tmp/project", model: "fake/test" });
+    const session = store.create({ cwd: resolve("/tmp/project"), model: "fake/test" });
 
     store.appendMessage(session.id, userMessage);
     store.appendMessage(session.id, assistantMessage);
@@ -61,7 +61,7 @@ describe("session store", () => {
 
   it("replaces messages during compaction", async () => {
     const store = makeStore(await tempDir());
-    const session = store.create({ cwd: "/tmp/project", model: "fake/test" });
+    const session = store.create({ cwd: resolve("/tmp/project"), model: "fake/test" });
     store.appendMessage(session.id, userMessage);
     store.appendMessage(session.id, assistantMessage);
 
@@ -71,7 +71,7 @@ describe("session store", () => {
 
   it("searches message content", async () => {
     const store = makeStore(await tempDir());
-    const session = store.create({ cwd: "/tmp/project", model: "fake/test" });
+    const session = store.create({ cwd: resolve("/tmp/project"), model: "fake/test" });
     store.appendMessage(session.id, { role: "user", content: "needle in a haystack" });
 
     const results = store.search("needle");
@@ -82,7 +82,11 @@ describe("session store", () => {
 
   it("exports JSON and markdown", async () => {
     const store = makeStore(await tempDir());
-    const session = store.create({ cwd: "/tmp/project", model: "fake/test", title: "Demo" });
+    const session = store.create({
+      cwd: resolve("/tmp/project"),
+      model: "fake/test",
+      title: "Demo",
+    });
     store.appendMessage(session.id, userMessage);
     store.appendMessage(session.id, assistantMessage);
 
@@ -101,7 +105,7 @@ describe("session store", () => {
 
   it("deletes a session", async () => {
     const store = makeStore(await tempDir());
-    const session = store.create({ cwd: "/tmp/project", model: "fake/test" });
+    const session = store.create({ cwd: resolve("/tmp/project"), model: "fake/test" });
     store.appendMessage(session.id, userMessage);
 
     expect(store.delete(session.id)).toBe(true);
