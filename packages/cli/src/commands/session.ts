@@ -16,6 +16,15 @@ function fail(error: unknown): void {
   process.exitCode = 1;
 }
 
+function withStore<T>(fn: (store: SessionStore) => T): T {
+  const store = new SessionStore();
+  try {
+    return fn(store);
+  } finally {
+    store.close();
+  }
+}
+
 export function registerSessionCommands(program: Command): void {
   const sessions = program.command("sessions").description("Manage persisted sessions");
 
@@ -24,17 +33,18 @@ export function registerSessionCommands(program: Command): void {
     .description("List recent sessions")
     .action(() => {
       try {
-        const store = new SessionStore();
-        const records = store.list({ limit: 50 });
-        if (records.length === 0) {
-          process.stdout.write("(no sessions)\n");
-          return;
-        }
-        for (const record of records) {
-          process.stdout.write(
-            `${record.id}\t${record.status}\t${record.model}\t${record.cwd}\t$${record.cost.toFixed(4)}\t${record.updatedAt}\n`,
-          );
-        }
+        withStore((store) => {
+          const records = store.list({ limit: 50 });
+          if (records.length === 0) {
+            process.stdout.write("(no sessions)\n");
+            return;
+          }
+          for (const record of records) {
+            process.stdout.write(
+              `${record.id}\t${record.status}\t${record.model}\t${record.cwd}\t$${record.cost.toFixed(4)}\t${record.updatedAt}\n`,
+            );
+          }
+        });
       } catch (error) {
         fail(error);
       }
@@ -45,18 +55,19 @@ export function registerSessionCommands(program: Command): void {
     .description("Show a session and its recent messages")
     .action((id: string) => {
       try {
-        const store = new SessionStore();
-        const record = store.get(id);
-        if (!record) {
-          process.stderr.write(`Session ${id} not found.\n`);
-          process.exitCode = 1;
-          return;
-        }
-        process.stdout.write(`${JSON.stringify(record, null, 2)}\n`);
-        const messages = store.readMessages(id).slice(-5);
-        for (const message of messages) {
-          process.stdout.write(`\n### ${message.role}\n${message.content}\n`);
-        }
+        withStore((store) => {
+          const record = store.get(id);
+          if (!record) {
+            process.stderr.write(`Session ${id} not found.\n`);
+            process.exitCode = 1;
+            return;
+          }
+          process.stdout.write(`${JSON.stringify(record, null, 2)}\n`);
+          const messages = store.readMessages(id).slice(-5);
+          for (const message of messages) {
+            process.stdout.write(`\n### ${message.role}\n${message.content}\n`);
+          }
+        });
       } catch (error) {
         fail(error);
       }
@@ -68,9 +79,10 @@ export function registerSessionCommands(program: Command): void {
     .option("--format <format>", "json | md", "json")
     .action((id: string, options: { format?: string }) => {
       try {
-        const store = new SessionStore();
-        const format = options.format === "md" ? "md" : "json";
-        process.stdout.write(`${store.export(id, format)}\n`);
+        withStore((store) => {
+          const format = options.format === "md" ? "md" : "json";
+          process.stdout.write(`${store.export(id, format)}\n`);
+        });
       } catch (error) {
         fail(error);
       }
@@ -81,17 +93,18 @@ export function registerSessionCommands(program: Command): void {
     .description("Search session messages")
     .action((query: string) => {
       try {
-        const store = new SessionStore();
-        const results = store.search(query);
-        if (results.length === 0) {
-          process.stdout.write("(no matches)\n");
-          return;
-        }
-        for (const result of results) {
-          process.stdout.write(
-            `${result.sessionID}\t${result.role}\t${result.content.replace(/\n/g, " ")}\n`,
-          );
-        }
+        withStore((store) => {
+          const results = store.search(query);
+          if (results.length === 0) {
+            process.stdout.write("(no matches)\n");
+            return;
+          }
+          for (const result of results) {
+            process.stdout.write(
+              `${result.sessionID}\t${result.role}\t${result.content.replace(/\n/g, " ")}\n`,
+            );
+          }
+        });
       } catch (error) {
         fail(error);
       }
@@ -102,25 +115,26 @@ export function registerSessionCommands(program: Command): void {
     .description("Copy a session into a new session")
     .action((id: string) => {
       try {
-        const store = new SessionStore();
-        const original = store.get(id);
-        if (!original) {
-          process.stderr.write(`Session ${id} not found.\n`);
-          process.exitCode = 1;
-          return;
-        }
-        const fork = store.create({
-          cwd: original.cwd,
-          model: original.model,
-          agent: original.agent,
-          title: `${original.title} (fork)`,
-          parentID: original.id,
-          permissions: original.permissions,
-          metadata: original.metadata,
+        withStore((store) => {
+          const original = store.get(id);
+          if (!original) {
+            process.stderr.write(`Session ${id} not found.\n`);
+            process.exitCode = 1;
+            return;
+          }
+          const fork = store.create({
+            cwd: original.cwd,
+            model: original.model,
+            agent: original.agent,
+            title: `${original.title} (fork)`,
+            parentID: original.id,
+            permissions: original.permissions,
+            metadata: original.metadata,
+          });
+          for (const message of store.readMessages(id)) store.appendMessage(fork.id, message);
+          for (const event of store.readEvents(id)) store.appendEvent(fork.id, event);
+          process.stdout.write(`${fork.id}\n`);
         });
-        for (const message of store.readMessages(id)) store.appendMessage(fork.id, message);
-        for (const event of store.readEvents(id)) store.appendEvent(fork.id, event);
-        process.stdout.write(`${fork.id}\n`);
       } catch (error) {
         fail(error);
       }
@@ -131,8 +145,9 @@ export function registerSessionCommands(program: Command): void {
     .description("Delete a session")
     .action((id: string) => {
       try {
-        const store = new SessionStore();
-        process.stdout.write(store.delete(id) ? "deleted\n" : "not found\n");
+        withStore((store) => {
+          process.stdout.write(store.delete(id) ? "deleted\n" : "not found\n");
+        });
       } catch (error) {
         fail(error);
       }
@@ -143,23 +158,24 @@ export function registerSessionCommands(program: Command): void {
     .description("Compact a stored session's context")
     .action((id: string) => {
       try {
-        const store = new SessionStore();
-        const record = store.get(id);
-        if (!record) {
-          process.stderr.write(`Session ${id} not found.\n`);
-          process.exitCode = 1;
-          return;
-        }
-        const parsed = parseModelRef(record.model);
-        const info = parsed ? modelInfoFor(parsed.provider, parsed.model) : undefined;
-        const result = compactMessages(store.readMessages(id), {
-          contextWindow: info?.contextWindow ?? 128_000,
-          keepRecent: 6,
+        withStore((store) => {
+          const record = store.get(id);
+          if (!record) {
+            process.stderr.write(`Session ${id} not found.\n`);
+            process.exitCode = 1;
+            return;
+          }
+          const parsed = parseModelRef(record.model);
+          const info = parsed ? modelInfoFor(parsed.provider, parsed.model) : undefined;
+          const result = compactMessages(store.readMessages(id), {
+            contextWindow: info?.contextWindow ?? 128_000,
+            keepRecent: 6,
+          });
+          store.replaceMessages(id, result.messages);
+          process.stdout.write(
+            `Compacted ${result.omitted} message(s); ${result.tokensBefore} -> ${result.tokensAfter} estimated tokens.\n`,
+          );
         });
-        store.replaceMessages(id, result.messages);
-        process.stdout.write(
-          `Compacted ${result.omitted} message(s); ${result.tokensBefore} -> ${result.tokensAfter} estimated tokens.\n`,
-        );
       } catch (error) {
         fail(error);
       }

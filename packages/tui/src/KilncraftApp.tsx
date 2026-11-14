@@ -472,6 +472,14 @@ export function KilncraftApp(options: KilncraftTuiOptions): React.ReactNode {
     agentRef.current = agent;
   }, [agent]);
 
+  useEffect(
+    () => () => {
+      void lspRef.current?.close();
+      store.close();
+    },
+    [store],
+  );
+
   useEffect(() => {
     if (!config) return;
     if (!agentRef.current) createAgent();

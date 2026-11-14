@@ -69,93 +69,105 @@ export async function runPrompt(options: RunPromptOptions): Promise<RunPromptRes
   const audit = new AuditLog(join(dataDir, "audit.jsonl"));
   const checkpoints = new CheckpointManager(dataDir);
 
-  let session: Session | undefined;
-  if (options.sessionID) {
-    session = store.get(options.sessionID);
-    if (!session) {
-      throw new KilncraftError("session_not_found", `Session ${options.sessionID} was not found`, {
-        details: { sessionID: options.sessionID },
-      });
+  try {
+    let session: Session | undefined;
+    if (options.sessionID) {
+      session = store.get(options.sessionID);
+      if (!session) {
+        throw new KilncraftError(
+          "session_not_found",
+          `Session ${options.sessionID} was not found`,
+          {
+            details: { sessionID: options.sessionID },
+          },
+        );
+      }
+    } else if (options.continueSession) {
+      session = store.list({ cwd })[0];
     }
-  } else if (options.continueSession) {
-    session = store.list({ cwd })[0];
-  }
 
-  const modelRef = options.model ?? session?.model ?? loaded.config.model ?? env.KILNCRAFT_MODEL;
-  if (!modelRef) {
-    throw new KilncraftError(
-      "invalid_argument",
-      "No model configured. Set `model` in config, pass --model, or set KILNCRAFT_MODEL.",
-      { hint: "Example: --model anthropic/claude-sonnet-4-5" },
-    );
-  }
+    const modelRef = options.model ?? session?.model ?? loaded.config.model ?? env.KILNCRAFT_MODEL;
+    if (!modelRef) {
+      throw new KilncraftError(
+        "invalid_argument",
+        "No model configured. Set `model` in config, pass --model, or set KILNCRAFT_MODEL.",
+        { hint: "Example: --model anthropic/claude-sonnet-4-5" },
+      );
+    }
 
-  const parsed = parseModelRef(modelRef);
-  if (!parsed) {
-    throw new KilncraftError(
-      "invalid_argument",
-      `Invalid model reference "${modelRef}". Expected provider/model.`,
-      { hint: "Example: anthropic/claude-sonnet-4-5" },
-    );
-  }
+    const parsed = parseModelRef(modelRef);
+    if (!parsed) {
+      throw new KilncraftError(
+        "invalid_argument",
+        `Invalid model reference "${modelRef}". Expected provider/model.`,
+        { hint: "Example: anthropic/claude-sonnet-4-5" },
+      );
+    }
 
-  const registry = options.registry ?? createDefaultProviderRegistry(env);
-  const provider = registry.get(parsed.provider);
-  if (!provider) {
-    throw new KilncraftError("provider_error", `Provider "${parsed.provider}" is not configured.`, {
-      hint: `Available providers: ${registry
-        .list()
-        .map((entry) => entry.id)
-        .join(", ")}`,
-    });
-  }
+    const registry = options.registry ?? createDefaultProviderRegistry(env);
+    const provider = registry.get(parsed.provider);
+    if (!provider) {
+      throw new KilncraftError(
+        "provider_error",
+        `Provider "${parsed.provider}" is not configured.`,
+        {
+          hint: `Available providers: ${registry
+            .list()
+            .map((entry) => entry.id)
+            .join(", ")}`,
+        },
+      );
+    }
 
-  const sessionCwd = session?.cwd ?? cwd;
-  const permissionMode =
-    options.permissionMode ?? session?.permissions ?? loaded.config.permissions.default;
-  const permissions = new PermissionEngine({
-    mode: permissionMode,
-    cwd: sessionCwd,
-    rules: loaded.config.permissions.rules,
-  });
-
-  const logger =
-    options.logger ??
-    createLogger({
-      level: options.verbose ? "debug" : (env.KILNCRAFT_LOG_LEVEL ?? "info"),
+    const sessionCwd = session?.cwd ?? cwd;
+    const permissionMode =
+      options.permissionMode ?? session?.permissions ?? loaded.config.permissions.default;
+    const permissions = new PermissionEngine({
+      mode: permissionMode,
+      cwd: sessionCwd,
+      rules: loaded.config.permissions.rules,
     });
 
-  const agent = new Agent({
-    cwd: sessionCwd,
-    provider,
-    model: parsed.model,
-    tools: options.tools ?? createDefaultToolRegistry(),
-    permissions,
-    logger,
-    agent: options.agent ?? loaded.config.agent,
-    store,
-    session,
-    audit,
-    checkpoints,
-    sandbox: loaded.config.sandbox.enabled
-      ? createSandbox({ workspace: sessionCwd, network: loaded.config.sandbox.network })
-      : undefined,
-    lsp: new LspManager(loaded.config.lsp.servers as Record<string, LspServerConfig>, sessionCwd),
-  });
+    const logger =
+      options.logger ??
+      createLogger({
+        level: options.verbose ? "debug" : (env.KILNCRAFT_LOG_LEVEL ?? "info"),
+      });
 
-  const result = await agent.prompt(options.prompt, {
-    onEvent: options.onEvent,
-    signal: options.signal,
-  });
+    const agent = new Agent({
+      cwd: sessionCwd,
+      provider,
+      model: parsed.model,
+      tools: options.tools ?? createDefaultToolRegistry(),
+      permissions,
+      logger,
+      agent: options.agent ?? loaded.config.agent,
+      store,
+      session,
+      audit,
+      checkpoints,
+      sandbox: loaded.config.sandbox.enabled
+        ? createSandbox({ workspace: sessionCwd, network: loaded.config.sandbox.network })
+        : undefined,
+      lsp: new LspManager(loaded.config.lsp.servers as Record<string, LspServerConfig>, sessionCwd),
+    });
 
-  return {
-    sessionID: result.sessionID,
-    model: modelRef,
-    permissionMode,
-    text: result.text,
-    usage: result.usage,
-    cost: result.cost,
-    toolCalls: result.toolCalls,
-    stopReason: result.stopReason,
-  };
+    const result = await agent.prompt(options.prompt, {
+      onEvent: options.onEvent,
+      signal: options.signal,
+    });
+
+    return {
+      sessionID: result.sessionID,
+      model: modelRef,
+      permissionMode,
+      text: result.text,
+      usage: result.usage,
+      cost: result.cost,
+      toolCalls: result.toolCalls,
+      stopReason: result.stopReason,
+    };
+  } finally {
+    store.close();
+  }
 }

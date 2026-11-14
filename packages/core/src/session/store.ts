@@ -82,6 +82,7 @@ function defaultTitle(cwd: string): string {
 export class SessionStore {
   readonly dataDir: string;
   private readonly db: InstanceType<typeof DatabaseSync>;
+  private closed = false;
 
   constructor(options: { dataDir?: string } = {}) {
     this.dataDir = options.dataDir ? resolve(options.dataDir) : resolveDataDir();
@@ -400,7 +401,13 @@ export class SessionStore {
   }
 
   close(): void {
-    this.db.close();
+    if (this.closed) return;
+    this.closed = true;
+    try {
+      this.db.close();
+    } catch {
+      // Closing twice or after a failed connection must not crash the caller.
+    }
   }
 
   private nextSequence(table: "messages" | "events", sessionID: string): number {
