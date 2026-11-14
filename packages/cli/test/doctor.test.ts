@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { stripVTControlCharacters } from "node:util";
@@ -42,6 +42,28 @@ describe("doctor", () => {
     );
     expect(result.checks.find((check) => check.name === "Config")?.status).toBe("warn");
     expect(result.checks.find((check) => check.name === "Telemetry")?.detail).toContain("disabled");
+  });
+
+  it("reports valid config, invalid config, and telemetry opt-in", async () => {
+    const validDir = await makeTempDir();
+    const globalPath = join(validDir, "global.json");
+    await writeFile(globalPath, JSON.stringify({ model: "acme/model" }), "utf8");
+
+    const valid = await runDoctor({
+      cwd: validDir,
+      globalPath,
+      env: { KILNCRAFT_TELEMETRY: "1" },
+    });
+    expect(valid.checks.find((check) => check.name === "Config")?.status).toBe("ok");
+    expect(valid.checks.find((check) => check.name === "Telemetry")?.detail).toContain("enabled");
+
+    const invalidDir = await makeTempDir();
+    const invalidPath = join(invalidDir, "global.json");
+    await writeFile(invalidPath, "{ nope", "utf8");
+    const invalid = await runDoctor({ cwd: invalidDir, globalPath: invalidPath, env: {} });
+    expect(invalid.checks.find((check) => check.name === "Config")?.status).toBe("fail");
+    expect(formatDoctor(invalid)).toContain("✗");
+    expect(formatDoctor(valid)).toContain("✓");
   });
 
   it("formats checks without ANSI codes when NO_COLOR is set", async () => {

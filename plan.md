@@ -141,8 +141,8 @@ P1 completion:
 - **Plugin reload** — SDK `kilncraft.reload()` re-reads config, reloads plugins, and
   clears cached agents.
 
-Tests: 33 shared + 94 core + 10 CLI + 16 TUI + 3 SDK + 5 server + 5 MCP + 1
-plugin-sdk + 6 sandbox + 3 LSP + 4 eval = **180 tests**.
+Tests: 33 shared + 94 core + 19 CLI + 16 TUI + 3 SDK + 5 server + 5 MCP + 1
+plugin-sdk + 6 sandbox + 3 LSP + 4 eval = **189 tests**.
 
 Remaining scope (not yet implemented): git tools (`git_status`, `git_diff`,
 `git_log`, `git_commit`, `git_branch`, `worktree_create`), web tools
