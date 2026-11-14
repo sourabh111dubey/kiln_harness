@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { ProviderRegistry } from "@kilncraft/core";
 import type { ProviderAdapter, ProviderCapabilities, StreamEvent } from "@kilncraft/shared";
-import { render } from "ink-testing-library";
+import { cleanup, render } from "ink-testing-library";
 import { afterEach, describe, expect, it } from "vitest";
 import { KilncraftApp } from "../src/KilncraftApp";
 
@@ -28,6 +28,7 @@ async function waitFor(predicate: () => boolean, timeout = 3_000): Promise<void>
 }
 
 afterEach(async () => {
+  cleanup();
   await Promise.all(
     directories.splice(0).map((directory) => rm(directory, { recursive: true, force: true })),
   );
