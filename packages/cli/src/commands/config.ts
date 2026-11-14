@@ -1,4 +1,4 @@
-import { configJsonSchema, loadConfig, resolveGlobalConfigPath } from "@kiln/shared";
+import { configJsonSchema, loadConfig, resolveGlobalConfigPath } from "@kilncraft/shared";
 import type { Command } from "commander";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -13,7 +13,7 @@ export function getConfigValue(config: unknown, path: string): unknown {
 }
 
 export function registerConfigCommand(program: Command): void {
-  const config = program.command("config").description("Inspect kiln configuration");
+  const config = program.command("config").description("Inspect kilncraft configuration");
 
   config
     .command("path")

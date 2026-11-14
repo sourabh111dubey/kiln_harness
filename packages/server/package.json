@@ -1,5 +1,5 @@
 {
-  "name": "@kiln/server",
+  "name": "@kilncraft/server",
   "version": "1.0.0",
   "private": false,
   "type": "module",
@@ -21,15 +21,15 @@
     "clean": "rm -rf dist .turbo coverage"
   },
   "dependencies": {
-    "@kiln/core": "workspace:*",
-    "@kiln/shared": "workspace:*",
+    "@kilncraft/core": "workspace:*",
+    "@kilncraft/shared": "workspace:*",
     "@hono/node-server": "2.1.8",
-    "@kiln/mcp": "workspace:*",
+    "@kilncraft/mcp": "workspace:*",
     "hono": "4.13.18",
     "zod": "4.6.7",
-    "@kiln/sandbox": "workspace:*",
+    "@kilncraft/sandbox": "workspace:*",
     "ws": "8.23.0",
-    "@kiln/lsp": "workspace:*"
+    "@kilncraft/lsp": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "26.6.6",

@@ -1,5 +1,5 @@
 {
-  "name": "@kiln/sdk",
+  "name": "@kilncraft/sdk",
   "version": "1.0.0",
   "private": false,
   "type": "module",
@@ -21,10 +21,10 @@
     "clean": "rm -rf dist .turbo coverage"
   },
   "dependencies": {
-    "@kiln/core": "workspace:*",
-    "@kiln/shared": "workspace:*",
-    "@kiln/sandbox": "workspace:*",
-    "@kiln/lsp": "workspace:*"
+    "@kilncraft/core": "workspace:*",
+    "@kilncraft/shared": "workspace:*",
+    "@kilncraft/sandbox": "workspace:*",
+    "@kilncraft/lsp": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "26.6.6",

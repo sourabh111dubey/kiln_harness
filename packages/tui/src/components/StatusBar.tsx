@@ -1,5 +1,5 @@
 import { basename } from "node:path";
-import type { Usage } from "@kiln/shared";
+import type { Usage } from "@kilncraft/shared";
 import { Box, Text } from "ink";
 import { color, type Theme } from "../theme";
 

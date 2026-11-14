@@ -1,4 +1,4 @@
-import type { LspManagerLike, SandboxAdapter } from "@kiln/shared";
+import type { LspManagerLike, SandboxAdapter } from "@kilncraft/shared";
 import {
   addUsage,
   type ChatMessage,
@@ -6,16 +6,16 @@ import {
   errors,
   estimateCost,
   ids,
-  KilnError,
+  KilncraftError,
   type PermissionDecision,
   type ProviderAdapter,
   type Session,
   type StreamEvent,
   type ToolCall,
   type ToolOutput,
-  toKilnError,
+  toKilncraftError,
   type Usage,
-} from "@kiln/shared";
+} from "@kilncraft/shared";
 import type { Logger } from "pino";
 import type { PermissionEngine } from "../permissions/engine";
 import type { PluginHost } from "../plugin/host";
@@ -54,7 +54,7 @@ export type AgentEvent =
   | { type: "compaction.started"; reason: string; tokensBefore: number }
   | { type: "compaction.completed"; summary: string; tokensAfter: number }
   | { type: "turn.end"; stopReason: string; usage: Usage; cost: number }
-  | { type: "error"; error: KilnError };
+  | { type: "error"; error: KilncraftError };
 
 export interface PermissionAskRequest {
   id: string;
@@ -124,7 +124,7 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number, signal: AbortSig
     const timer = setTimeout(() => {
       cleanup();
       reject(
-        new KilnError("tool_error", `Tool timed out after ${timeoutMs}ms`, {
+        new KilncraftError("tool_error", `Tool timed out after ${timeoutMs}ms`, {
           recoverable: false,
         }),
       );
@@ -313,10 +313,10 @@ export class Agent {
 
       return await this.finish(lastText, "max_turns", emit);
     } catch (error) {
-      const kilnError = toKilnError(error);
+      const kilncraftError = toKilncraftError(error);
       this.updateSession({ status: "error" });
-      await emit({ type: "error", error: kilnError });
-      throw kilnError;
+      await emit({ type: "error", error: kilncraftError });
+      throw kilncraftError;
     }
   }
 
@@ -406,17 +406,17 @@ export class Agent {
 
   private async persistEvent(event: AgentEvent): Promise<void> {
     try {
-      const kilnEvent = this.toKilnEvent(event);
-      if (kilnEvent) {
-        this.options.store?.appendEvent(this.session.id, kilnEvent);
-        await this.options.plugins?.emit(kilnEvent);
+      const kilncraftEvent = this.toKilncraftEvent(event);
+      if (kilncraftEvent) {
+        this.options.store?.appendEvent(this.session.id, kilncraftEvent);
+        await this.options.plugins?.emit(kilncraftEvent);
       }
     } catch (error) {
       this.options.logger.warn({ err: error }, "failed to persist session event");
     }
   }
 
-  private toKilnEvent(event: AgentEvent) {
+  private toKilncraftEvent(event: AgentEvent) {
     switch (event.type) {
       case "turn.start":
         return {
@@ -511,7 +511,7 @@ export class Agent {
         case "finish":
           break;
         case "error":
-          throw new KilnError("provider_error", event.message, {
+          throw new KilncraftError("provider_error", event.message, {
             recoverable: event.retryable,
           });
       }
@@ -662,10 +662,10 @@ export class Agent {
       await this.emitResult(call, finalOutput, decision, durationMs, emit);
       return { call, output: finalOutput, decision, durationMs };
     } catch (error) {
-      const kilnError = toKilnError(error);
+      const kilncraftError = toKilncraftError(error);
       const output: ToolOutput = {
         kind: "text",
-        text: `Tool ${call.name} failed: ${kilnError.message}`,
+        text: `Tool ${call.name} failed: ${kilncraftError.message}`,
       };
       const durationMs = Date.now() - startedAt;
       await this.emitResult(call, output, "deny", durationMs, emit);

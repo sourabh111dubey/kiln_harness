@@ -13,14 +13,14 @@ import {
 const temporaryDirectories: string[] = [];
 
 async function makeTempDir(): Promise<string> {
-  const directory = await mkdtemp(join(tmpdir(), "kiln-config-"));
+  const directory = await mkdtemp(join(tmpdir(), "kilncraft-config-"));
   temporaryDirectories.push(directory);
   return directory;
 }
 
 async function writeProjectConfig(directory: string, contents: string): Promise<string> {
-  const path = join(directory, ".kiln", "config.json");
-  await mkdir(join(directory, ".kiln"), { recursive: true });
+  const path = join(directory, ".kilncraft", "config.json");
+  await mkdir(join(directory, ".kilncraft"), { recursive: true });
   await writeFile(path, contents, "utf8");
   return path;
 }
@@ -52,7 +52,7 @@ describe("config", () => {
     const loaded = await loadConfig({
       cwd: directory,
       globalPath,
-      env: { KILN_PERMISSION_MODE: "acceptEdits" },
+      env: { KILNCRAFT_PERMISSION_MODE: "acceptEdits" },
     });
 
     expect(loaded.config.model).toBe("project/model");
@@ -110,11 +110,11 @@ describe("config", () => {
       cwd: directory,
       globalPath: join(directory, "missing.json"),
       env: {
-        KILN_MODEL: "env/model",
-        KILN_SMALL_MODEL: "env/small",
-        KILN_AGENT: "plan",
-        KILN_PERMISSION_MODE: "bypassPermissions",
-        KILN_TELEMETRY: "true",
+        KILNCRAFT_MODEL: "env/model",
+        KILNCRAFT_SMALL_MODEL: "env/small",
+        KILNCRAFT_AGENT: "plan",
+        KILNCRAFT_PERMISSION_MODE: "bypassPermissions",
+        KILNCRAFT_TELEMETRY: "true",
       },
     });
 
@@ -137,7 +137,7 @@ describe("config", () => {
 
   it("reports unreadable config paths", async () => {
     const directory = await makeTempDir();
-    const configPath = join(directory, ".kiln", "config.json");
+    const configPath = join(directory, ".kilncraft", "config.json");
     await mkdir(configPath, { recursive: true });
 
     await expect(

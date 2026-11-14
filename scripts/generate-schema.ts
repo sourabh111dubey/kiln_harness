@@ -3,9 +3,9 @@ import { configJsonSchema } from "../packages/shared/src/config";
 
 const schema = {
   $schema: "https://json-schema.org/draft/2020-12/schema",
-  $id: "https://kiln.dev/config.schema.json",
-  title: "Kiln configuration",
-  description: "Configuration schema for the kiln coding agent.",
+  $id: "https://kilncraft.dev/config.schema.json",
+  title: "Kilncraft configuration",
+  description: "Configuration schema for the kilncraft coding agent.",
   ...configJsonSchema,
 };
 

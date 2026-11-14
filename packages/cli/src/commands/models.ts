@@ -1,5 +1,5 @@
-import { createDefaultProviderRegistry, listKnownModels } from "@kiln/core";
-import { loadConfig } from "@kiln/shared";
+import { createDefaultProviderRegistry, listKnownModels } from "@kilncraft/core";
+import { loadConfig } from "@kilncraft/shared";
 import type { Command } from "commander";
 
 export function registerModelsCommand(program: Command): void {

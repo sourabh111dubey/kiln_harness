@@ -22,7 +22,7 @@ import {
 const directories: string[] = [];
 
 async function tempDir(): Promise<string> {
-  const directory = await mkdtemp(join(tmpdir(), "kiln-common-"));
+  const directory = await mkdtemp(join(tmpdir(), "kilncraft-common-"));
   directories.push(directory);
   return directory;
 }

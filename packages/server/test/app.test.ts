@@ -1,15 +1,15 @@
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createDefaultToolRegistry, ProviderRegistry } from "@kiln/core";
-import type { ProviderAdapter, ProviderCapabilities, StreamEvent } from "@kiln/shared";
+import { createDefaultToolRegistry, ProviderRegistry } from "@kilncraft/core";
+import type { ProviderAdapter, ProviderCapabilities, StreamEvent } from "@kilncraft/shared";
 import { afterEach, describe, expect, it } from "vitest";
-import { createKilnApp } from "../src/app";
+import { createKilncraftApp } from "../src/app";
 
 const directories: string[] = [];
 
 async function tempDir(): Promise<string> {
-  const directory = await mkdtemp(join(tmpdir(), "kiln-server-"));
+  const directory = await mkdtemp(join(tmpdir(), "kilncraft-server-"));
   directories.push(directory);
   return directory;
 }
@@ -43,16 +43,16 @@ class FakeProvider implements ProviderAdapter {
 }
 
 async function makeApp(provider: FakeProvider, cwd: string, dataDir: string) {
-  return createKilnApp({
+  return createKilncraftApp({
     cwd,
     dataDir,
-    env: { KILN_CONFIG_DIR: dataDir, KILN_DATA_DIR: dataDir },
+    env: { KILNCRAFT_CONFIG_DIR: dataDir, KILNCRAFT_DATA_DIR: dataDir },
     registry: new ProviderRegistry().register(provider),
     tools: createDefaultToolRegistry(),
   });
 }
 
-describe("kiln server", () => {
+describe("kilncraft server", () => {
   it("serves health, info, tools, and models", async () => {
     const cwd = await tempDir();
     const dataDir = await tempDir();

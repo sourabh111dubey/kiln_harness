@@ -1,5 +1,5 @@
 {
-  "name": "@kiln/mcp",
+  "name": "@kilncraft/mcp",
   "version": "1.0.0",
   "private": false,
   "type": "module",
@@ -21,8 +21,8 @@
     "clean": "rm -rf dist .turbo coverage"
   },
   "dependencies": {
-    "@kiln/core": "workspace:*",
-    "@kiln/shared": "workspace:*",
+    "@kilncraft/core": "workspace:*",
+    "@kilncraft/shared": "workspace:*",
     "@modelcontextprotocol/sdk": "1.32.2",
     "zod": "4.6.7"
   },

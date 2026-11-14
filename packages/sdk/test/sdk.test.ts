@@ -1,15 +1,15 @@
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createDefaultToolRegistry, ProviderRegistry } from "@kiln/core";
-import type { ProviderAdapter, ProviderCapabilities, StreamEvent } from "@kiln/shared";
+import { createDefaultToolRegistry, ProviderRegistry } from "@kilncraft/core";
+import type { ProviderAdapter, ProviderCapabilities, StreamEvent } from "@kilncraft/shared";
 import { afterEach, describe, expect, it } from "vitest";
-import { createKiln } from "../src/index";
+import { createKilncraft } from "../src/index";
 
 const directories: string[] = [];
 
 async function tempDir(): Promise<string> {
-  const directory = await mkdtemp(join(tmpdir(), "kiln-sdk-"));
+  const directory = await mkdtemp(join(tmpdir(), "kilncraft-sdk-"));
   directories.push(directory);
   return directory;
 }
@@ -42,7 +42,7 @@ class FakeProvider implements ProviderAdapter {
   }
 }
 
-describe("kiln SDK", () => {
+describe("kilncraft SDK", () => {
   it("creates a session, prompts, and resumes", async () => {
     const cwd = await tempDir();
     const dataDir = await tempDir();
@@ -56,30 +56,30 @@ describe("kiln SDK", () => {
         { type: "finish", reason: "stop" },
       ],
     ]);
-    const kiln = createKiln({
+    const kilncraft = createKilncraft({
       cwd,
       dataDir,
-      env: { KILN_CONFIG_DIR: dataDir, KILN_DATA_DIR: dataDir },
+      env: { KILNCRAFT_CONFIG_DIR: dataDir, KILNCRAFT_DATA_DIR: dataDir },
       model: "fake/test",
       registry: new ProviderRegistry().register(provider),
       tools: createDefaultToolRegistry(),
     });
 
     try {
-      const session = await kiln.createSession({ title: "SDK test" });
-      const first = await kiln.prompt(session.id, "first");
+      const session = await kilncraft.createSession({ title: "SDK test" });
+      const first = await kilncraft.prompt(session.id, "first");
       expect(first.text).toBe("First.");
       expect(first.sessionID).toBe(session.id);
 
-      const before = kiln.store.readMessages(session.id).length;
-      const second = await kiln.prompt(session.id, "second");
+      const before = kilncraft.store.readMessages(session.id).length;
+      const second = await kilncraft.prompt(session.id, "second");
       expect(second.text).toBe("Second.");
-      expect(kiln.store.readMessages(session.id).length).toBeGreaterThan(before);
-      expect(kiln.listSessions({ cwd }).some((entry) => entry.id === session.id)).toBe(true);
-      expect(kiln.getSession(session.id)?.title).toBe("SDK test");
-      expect(kiln.exportSession(session.id, "md")).toContain("# SDK test");
+      expect(kilncraft.store.readMessages(session.id).length).toBeGreaterThan(before);
+      expect(kilncraft.listSessions({ cwd }).some((entry) => entry.id === session.id)).toBe(true);
+      expect(kilncraft.getSession(session.id)?.title).toBe("SDK test");
+      expect(kilncraft.exportSession(session.id, "md")).toContain("# SDK test");
     } finally {
-      kiln.close();
+      kilncraft.close();
     }
   });
 
@@ -99,10 +99,10 @@ describe("kiln SDK", () => {
         { type: "finish", reason: "stop" },
       ],
     ]);
-    const kiln = createKiln({
+    const kilncraft = createKilncraft({
       cwd,
       dataDir,
-      env: { KILN_CONFIG_DIR: dataDir, KILN_DATA_DIR: dataDir },
+      env: { KILNCRAFT_CONFIG_DIR: dataDir, KILNCRAFT_DATA_DIR: dataDir },
       model: "fake/test",
       permissionMode: "default",
       registry: new ProviderRegistry().register(provider),
@@ -111,28 +111,28 @@ describe("kiln SDK", () => {
     });
 
     try {
-      const session = await kiln.createSession();
-      const result = await kiln.prompt(session.id, "write it");
+      const session = await kilncraft.createSession();
+      const result = await kilncraft.prompt(session.id, "write it");
       expect(result.text).toBe("Done.");
       expect(result.toolCalls).toBe(1);
       expect(await readFile(join(cwd, "sdk.txt"), "utf8")).toBe("from sdk\n");
     } finally {
-      kiln.close();
+      kilncraft.close();
     }
   });
 
   it("requires a model", async () => {
     const cwd = await tempDir();
     const dataDir = await tempDir();
-    const kiln = createKiln({
+    const kilncraft = createKilncraft({
       cwd,
       dataDir,
-      env: { KILN_CONFIG_DIR: dataDir, KILN_DATA_DIR: dataDir },
+      env: { KILNCRAFT_CONFIG_DIR: dataDir, KILNCRAFT_DATA_DIR: dataDir },
     });
     try {
-      await expect(kiln.createSession()).rejects.toMatchObject({ code: "invalid_argument" });
+      await expect(kilncraft.createSession()).rejects.toMatchObject({ code: "invalid_argument" });
     } finally {
-      kiln.close();
+      kilncraft.close();
     }
   });
 });

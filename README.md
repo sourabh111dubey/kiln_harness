@@ -1,4 +1,4 @@
-# Kiln
+# Kilncraft
 
 A production-grade, model-agnostic coding agent.
 
@@ -17,9 +17,9 @@ A production-grade, model-agnostic coding agent.
 Install globally or run with `npx`:
 
 ```sh
-npm i -g @kiln/cli
-kiln doctor
-kiln
+npm i -g @kilncraft/cli
+kilncraft doctor
+kilncraft
 ```
 
 Or from this checkout:
@@ -34,8 +34,8 @@ node packages/cli/dist/index.js --version
 Docker:
 
 ```sh
-docker build -t kiln .
-docker run --rm -it -p 4096:4096 -v "$PWD:/work" kiln
+docker build -t kilncraft .
+docker run --rm -it -p 4096:4096 -v "$PWD:/work" kilncraft
 ```
 
 Launch the interactive TUI (requires a TTY):
@@ -60,7 +60,7 @@ allow workspace edits; shell commands still require a TUI approval or
 
 ## Sessions
 
-Sessions are persisted to `~/.kiln` (override with `KILN_DATA_DIR`):
+Sessions are persisted to `~/.kilncraft` (override with `KILNCRAFT_DATA_DIR`):
 
 - `index.db` — SQLite index for sessions, messages, and events
 - `sessions/<id>/events.jsonl` — append-only event mirror
@@ -68,17 +68,17 @@ Sessions are persisted to `~/.kiln` (override with `KILN_DATA_DIR`):
 - `sessions/<id>/checkpoints/` — pre-write file snapshots
 
 ```sh
-kiln run "continue the refactor" --continue
-kiln run "keep going" --session ses_...
-kiln sessions list
-kiln sessions show ses_...
-kiln sessions search "needle"
-kiln sessions export ses_... --format md
-kiln sessions fork ses_...
-kiln sessions compact ses_...
-kiln sessions delete ses_...
-kiln undo --session ses_...
-kiln audit
+kilncraft run "continue the refactor" --continue
+kilncraft run "keep going" --session ses_...
+kilncraft sessions list
+kilncraft sessions show ses_...
+kilncraft sessions search "needle"
+kilncraft sessions export ses_... --format md
+kilncraft sessions fork ses_...
+kilncraft sessions compact ses_...
+kilncraft sessions delete ses_...
+kilncraft undo --session ses_...
+kilncraft audit
 ```
 
 Context compaction is automatic at ~80% of the model's context window: older
@@ -87,7 +87,7 @@ forces it for a stored session.
 
 ## Interactive TUI
 
-`kiln` (with no subcommand) launches the Ink TUI. It streams assistant text,
+`kilncraft` (with no subcommand) launches the Ink TUI. It streams assistant text,
 renders diffs and markdown, shows tool status, and prompts for permissions.
 
 Keys:
@@ -103,35 +103,35 @@ Commands:
 /cost  /context  /doctor  /exit
 ```
 
-Themes: `KILN_THEME=default|dim|highContrast`; `NO_COLOR=1` disables color.
-`KILN_DATA_DIR` relocates sessions and audit logs.
+Themes: `KILNCRAFT_THEME=default|dim|highContrast`; `NO_COLOR=1` disables color.
+`KILNCRAFT_DATA_DIR` relocates sessions and audit logs.
 
 ## Workspace
 
-| Package            | Purpose                                                                  |
-| ------------------ | ------------------------------------------------------------------------ |
-| `@kiln/shared`     | Events, schemas, errors, config, logging, telemetry, provider contracts  |
-| `@kiln/core`       | Agent loop, providers, permissions, tools, sessions, compaction, plugins |
-| `@kiln/cli`        | `kiln` command-line interface                                            |
-| `@kiln/tui`        | Ink terminal UI (transcript, composer, diffs, modals)                    |
-| `@kiln/server`     | HTTP/SSE/WebSocket daemon, session API, permission-resume flow           |
-| `@kiln/sdk`        | Embed the agent in-process (no socket)                                   |
-| `@kiln/mcp`        | MCP client, stdio server, Streamable HTTP server                         |
-| `@kiln/plugin-sdk` | Plugin type definitions and `definePlugin`                               |
-| `@kiln/sandbox`    | bwrap / seatbelt / Docker command wrapping                               |
-| `@kiln/lsp`        | Language-server JSON-RPC client                                          |
-| `@kiln/eval`       | Task runner and benchmark adapters                                       |
+| Package                 | Purpose                                                                  |
+| ----------------------- | ------------------------------------------------------------------------ |
+| `@kilncraft/shared`     | Events, schemas, errors, config, logging, telemetry, provider contracts  |
+| `@kilncraft/core`       | Agent loop, providers, permissions, tools, sessions, compaction, plugins |
+| `@kilncraft/cli`        | `kilncraft` command-line interface                                       |
+| `@kilncraft/tui`        | Ink terminal UI (transcript, composer, diffs, modals)                    |
+| `@kilncraft/server`     | HTTP/SSE/WebSocket daemon, session API, permission-resume flow           |
+| `@kilncraft/sdk`        | Embed the agent in-process (no socket)                                   |
+| `@kilncraft/mcp`        | MCP client, stdio server, Streamable HTTP server                         |
+| `@kilncraft/plugin-sdk` | Plugin type definitions and `definePlugin`                               |
+| `@kilncraft/sandbox`    | bwrap / seatbelt / Docker command wrapping                               |
+| `@kilncraft/lsp`        | Language-server JSON-RPC client                                          |
+| `@kilncraft/eval`       | Task runner and benchmark adapters                                       |
 
 ## Providers
 
-| Provider id  | Env var                | Notes                                                     |
-| ------------ | ---------------------- | --------------------------------------------------------- |
-| `anthropic`  | `ANTHROPIC_API_KEY`    | Messages API, streaming tool calls                        |
-| `openai`     | `OPENAI_API_KEY`       | Chat Completions, OpenAI-compatible                       |
-| `openrouter` | `OPENROUTER_API_KEY`   | OpenAI-compatible routing; `OPENROUTER_BASE_URL` override |
-| `gemini`     | `GEMINI_API_KEY`       | `streamGenerateContent`                                   |
-| `ollama`     | `OLLAMA_HOST`          | Local, OpenAI-compatible, no key required                 |
-| `custom`     | `KILN_CUSTOM_BASE_URL` | Any OpenAI-compatible endpoint                            |
+| Provider id  | Env var                     | Notes                                                     |
+| ------------ | --------------------------- | --------------------------------------------------------- |
+| `anthropic`  | `ANTHROPIC_API_KEY`         | Messages API, streaming tool calls                        |
+| `openai`     | `OPENAI_API_KEY`            | Chat Completions, OpenAI-compatible                       |
+| `openrouter` | `OPENROUTER_API_KEY`        | OpenAI-compatible routing; `OPENROUTER_BASE_URL` override |
+| `gemini`     | `GEMINI_API_KEY`            | `streamGenerateContent`                                   |
+| `ollama`     | `OLLAMA_HOST`               | Local, OpenAI-compatible, no key required                 |
+| `custom`     | `KILNCRAFT_CUSTOM_BASE_URL` | Any OpenAI-compatible endpoint                            |
 
 Base URLs can be overridden with `ANTHROPIC_BASE_URL`, `OPENAI_BASE_URL`,
 `GEMINI_BASE_URL`, and `OLLAMA_HOST`.
@@ -150,7 +150,7 @@ Base URLs can be overridden with `ANTHROPIC_BASE_URL`, `OPENAI_BASE_URL`,
 ## Server API
 
 ```sh
-kiln serve --port 4096
+kilncraft serve --port 4096
 ```
 
 The daemon exposes JSON + SSE:
@@ -184,22 +184,22 @@ curl -X POST localhost:4096/sessions/<id>/permissions/<requestID> \
   -H 'content-type: application/json' -d '{"decision":"allow"}'
 ```
 
-Set `KILN_TOKEN` to require `Authorization: Bearer <token>` for remote access.
+Set `KILNCRAFT_TOKEN` to require `Authorization: Bearer <token>` for remote access.
 `GET /` serves a minimal browser page.
 
 ## SDK
 
 ```ts
-import { createKiln } from "@kiln/sdk";
+import { createKilncraft } from "@kilncraft/sdk";
 
-const kiln = createKiln({
+const kilncraft = createKilncraft({
   cwd: process.cwd(),
   model: "anthropic/claude-sonnet-4-5",
   permissionMode: "acceptEdits",
 });
 
-const session = await kiln.createSession({ title: "embed" });
-const result = await kiln.prompt(session.id, "fix the failing test", {
+const session = await kilncraft.createSession({ title: "embed" });
+const result = await kilncraft.prompt(session.id, "fix the failing test", {
   onEvent: (event) => console.log(event.type),
 });
 console.log(result.text, result.cost);
@@ -226,18 +226,18 @@ plugins, permissions, and tools.
 ```
 
 ```sh
-kiln mcp list
-kiln mcp serve       # expose kiln tools over MCP stdio
+kilncraft mcp list
+kilncraft mcp serve       # expose kilncraft tools over MCP stdio
 ```
 
 A plugin exports a `Plugin` object with `hooks` (`session.start`,
 `message.received`, `tool.before`, `tool.after`, `event`), `tools`, and `commands`.
-See `examples/plugins/` and `@kiln/plugin-sdk`.
+See `examples/plugins/` and `@kilncraft/plugin-sdk`.
 
 ## Configuration
 
-Configuration is JSONC. Precedence: defaults → `~/.kiln/config.json` →
-`.kiln/config.json` → `KILN_*` env vars → CLI flags.
+Configuration is JSONC. Precedence: defaults → `~/.kilncraft/config.json` →
+`.kilncraft/config.json` → `KILNCRAFT_*` env vars → CLI flags.
 
 ```jsonc
 {
@@ -247,8 +247,8 @@ Configuration is JSONC. Precedence: defaults → `~/.kiln/config.json` →
 }
 ```
 
-Run `kiln config path` to print the global config location and
-`kiln config schema` to print the JSON schema.
+Run `kilncraft config path` to print the global config location and
+`kilncraft config schema` to print the JSON schema.
 
 ## Security and release
 
@@ -259,22 +259,22 @@ Run `kiln config path` to print the global config location and
 - [CHANGELOG.md](./CHANGELOG.md) — release notes.
 - `pnpm perf:check` — performance budgets.
 - `pnpm audit` — dependency audit.
-- Docker: `docker build -t kiln .`
+- Docker: `docker build -t kilncraft .`
 
 ## CLI
 
 ```
-kiln                            # interactive TUI
-kiln "initial prompt"           # TUI with an initial prompt
-kiln run [prompt...]            # non-interactive agent
-kiln serve [--port 4096]        # HTTP/SSE daemon
-kiln models list                # known models + configured providers
-kiln sessions ...               # list/show/export/fork/search/compact/delete
-kiln undo                       # restore the latest checkpoint
-kiln audit                      # recent permission decisions
-kiln mcp list|serve             # MCP servers / stdio tool server
-kiln config path|schema|get     # configuration inspection
-kiln doctor                     # environment diagnostics
+kilncraft                            # interactive TUI
+kilncraft "initial prompt"           # TUI with an initial prompt
+kilncraft run [prompt...]            # non-interactive agent
+kilncraft serve [--port 4096]        # HTTP/SSE daemon
+kilncraft models list                # known models + configured providers
+kilncraft sessions ...               # list/show/export/fork/search/compact/delete
+kilncraft undo                       # restore the latest checkpoint
+kilncraft audit                      # recent permission decisions
+kilncraft mcp list|serve             # MCP servers / stdio tool server
+kilncraft config path|schema|get     # configuration inspection
+kilncraft doctor                     # environment diagnostics
 ```
 
 Global options: `--model`, `--cwd`, `--agent`, `--permission-mode`, `--standalone`,

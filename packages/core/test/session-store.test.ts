@@ -1,7 +1,7 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { ChatMessage, KilnEvent } from "@kiln/shared";
+import type { ChatMessage, KilncraftEvent } from "@kilncraft/shared";
 import { afterEach, describe, expect, it } from "vitest";
 import { SessionStore } from "../src/session/store";
 
@@ -9,7 +9,7 @@ const directories: string[] = [];
 const stores: SessionStore[] = [];
 
 async function tempDir(): Promise<string> {
-  const directory = await mkdtemp(join(tmpdir(), "kiln-store-"));
+  const directory = await mkdtemp(join(tmpdir(), "kilncraft-store-"));
   directories.push(directory);
   return directory;
 }
@@ -54,7 +54,7 @@ describe("session store", () => {
     store.appendMessage(session.id, assistantMessage);
     expect(store.readMessages(session.id)).toEqual([userMessage, assistantMessage]);
 
-    const event: KilnEvent = { type: "turn.start", turn: 1, prompt: "hello" };
+    const event: KilncraftEvent = { type: "turn.start", turn: 1, prompt: "hello" };
     store.appendEvent(session.id, event);
     expect(store.readEvents(session.id)).toEqual([event]);
   });

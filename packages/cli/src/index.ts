@@ -2,7 +2,7 @@
 import { realpathSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { renderKilnTui } from "@kiln/tui";
+import { renderKilncraftTui } from "@kilncraft/tui";
 import { Command } from "commander";
 import { registerConfigCommand } from "./commands/config";
 import { registerDoctorCommand } from "./commands/doctor";
@@ -17,8 +17,8 @@ export function createProgram(): Command {
   const program = new Command();
 
   program
-    .name("kiln")
-    .description("A production coding agent kiln")
+    .name("kilncraft")
+    .description("A production coding agent runtime")
     .version(readVersion(), "-v, --version")
     .argument("[prompt...]", "Initial prompt for the interactive session")
     .option("--model <model>", "Model to use, as provider/model")
@@ -45,7 +45,7 @@ export function createProgram(): Command {
     }
 
     try {
-      renderKilnTui({
+      renderKilncraftTui({
         cwd: options.cwd,
         model: options.model,
         permissionMode: options.permissionMode,
@@ -54,7 +54,7 @@ export function createProgram(): Command {
       });
     } catch (error) {
       process.stderr.write(
-        `kiln: failed to start TUI: ${error instanceof Error ? error.message : String(error)}\n`,
+        `kilncraft: failed to start TUI: ${error instanceof Error ? error.message : String(error)}\n`,
       );
       process.exitCode = 1;
     }
@@ -81,7 +81,7 @@ function isDirectInvocation(): boolean {
 if (isDirectInvocation()) {
   main().catch((error: unknown) => {
     const message = error instanceof Error ? error.message : String(error);
-    process.stderr.write(`kiln: ${message}\n`);
+    process.stderr.write(`kilncraft: ${message}\n`);
     process.exitCode = 1;
   });
 }

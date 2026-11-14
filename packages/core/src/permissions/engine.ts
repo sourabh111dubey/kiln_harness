@@ -1,5 +1,5 @@
 import { resolve } from "node:path";
-import type { PermissionDecision, PermissionMode, PermissionRule } from "@kiln/shared";
+import type { PermissionDecision, PermissionMode, PermissionRule } from "@kilncraft/shared";
 import { isPathInside, matchesGlob } from "../tools/common";
 
 export interface PermissionRequest {

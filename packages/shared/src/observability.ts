@@ -1,6 +1,6 @@
 import { type Attributes, type Span, SpanStatusCode, trace } from "@opentelemetry/api";
 
-export const tracer = trace.getTracer("kiln");
+export const tracer = trace.getTracer("kilncraft");
 
 export async function withSpan<T>(
   name: string,
@@ -49,7 +49,7 @@ export async function initTelemetry(
     ]);
 
     sdk = new sdkModule.NodeSDK({
-      serviceName: options.serviceName ?? "kiln",
+      serviceName: options.serviceName ?? "kilncraft",
       traceExporter: new exporterModule.OTLPTraceExporter(
         options.endpoint ? { url: options.endpoint } : {},
       ),

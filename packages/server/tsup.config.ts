@@ -10,5 +10,5 @@ export default defineConfig({
   clean: true,
   splitting: false,
   treeshake: true,
-  external: ["@kiln/core", "@kiln/shared", "@hono/node-server", "hono", "zod"],
+  external: ["@kilncraft/core", "@kilncraft/shared", "@hono/node-server", "hono", "zod"],
 });

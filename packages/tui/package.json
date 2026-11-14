@@ -1,5 +1,5 @@
 {
-  "name": "@kiln/tui",
+  "name": "@kilncraft/tui",
   "version": "1.0.0",
   "private": false,
   "type": "module",
@@ -21,12 +21,12 @@
     "clean": "rm -rf dist .turbo coverage"
   },
   "dependencies": {
-    "@kiln/core": "workspace:*",
-    "@kiln/shared": "workspace:*",
+    "@kilncraft/core": "workspace:*",
+    "@kilncraft/shared": "workspace:*",
     "ink": "8.0.0",
     "react": "19.3.1",
-    "@kiln/sandbox": "workspace:*",
-    "@kiln/lsp": "workspace:*"
+    "@kilncraft/sandbox": "workspace:*",
+    "@kilncraft/lsp": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "26.6.6",

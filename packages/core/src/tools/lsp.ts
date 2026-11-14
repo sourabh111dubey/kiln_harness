@@ -1,4 +1,4 @@
-import type { ToolDefinition } from "@kiln/shared";
+import type { ToolDefinition } from "@kilncraft/shared";
 import { z } from "zod";
 import { assertInsideWorkspace, assertRealInside, resolveWorkspacePath } from "./common";
 

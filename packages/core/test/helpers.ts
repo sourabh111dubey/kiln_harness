@@ -1,9 +1,9 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createLogger, type ToolContext } from "@kiln/shared";
+import { createLogger, type ToolContext } from "@kilncraft/shared";
 
-export async function makeTempDir(prefix = "kiln-core-"): Promise<string> {
+export async function makeTempDir(prefix = "kilncraft-core-"): Promise<string> {
   return mkdtemp(join(tmpdir(), prefix));
 }
 

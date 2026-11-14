@@ -1,4 +1,4 @@
-import type { ChatMessage } from "@kiln/shared";
+import type { ChatMessage } from "@kilncraft/shared";
 import { describe, expect, it } from "vitest";
 import {
   compactMessages,

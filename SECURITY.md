@@ -3,13 +3,13 @@
 ## Reporting
 
 Report vulnerabilities privately via GitHub Security Advisories:
-<https://github.com/kiln/kiln/security/advisories/new>.
+<https://github.com/kilncraft/kilncraft/security/advisories/new>.
 
 Do not open public issues for undisclosed vulnerabilities.
 
 ## Threat model
 
-Kiln executes model-authored tools on a developer machine. The security
+Kilncraft executes model-authored tools on a developer machine. The security
 boundaries are:
 
 1. **Permission engine** — first match wins; deny beats allow; unknown tools fail
@@ -30,14 +30,14 @@ boundaries are:
   repositories.
 - **MCP HTTP server is not exposed by default.** The MCP stdio server runs only
   when explicitly started.
-- **Remote server access requires `KILN_TOKEN`.** Local Unix-socket access is
+- **Remote server access requires `KILNCRAFT_TOKEN`.** Local Unix-socket access is
   trusted by design.
 - **Telemetry is opt-in and anonymous.**
 
 ## Hardening checklist
 
 - Run with `--permission-mode default` for untrusted repos.
-- Set `KILN_TOKEN` when binding the server to a non-loopback address.
+- Set `KILNCRAFT_TOKEN` when binding the server to a non-loopback address.
 - Do not run with `bypassPermissions` unless you trust the model and tools.
 - Keep dependencies patched; CI runs `pnpm audit` and CodeQL.
 - Review MCP server and plugin sources before enabling them.

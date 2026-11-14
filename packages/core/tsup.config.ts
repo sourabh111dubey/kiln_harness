@@ -10,5 +10,5 @@ export default defineConfig({
   clean: true,
   splitting: false,
   treeshake: true,
-  external: ["@kiln/shared", "diff", "node:sqlite", "pino", "tinyglobby", "zod"],
+  external: ["@kilncraft/shared", "diff", "node:sqlite", "pino", "tinyglobby", "zod"],
 });

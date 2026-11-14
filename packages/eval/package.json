@@ -1,5 +1,5 @@
 {
-  "name": "@kiln/eval",
+  "name": "@kilncraft/eval",
   "version": "1.0.0",
   "private": false,
   "publishConfig": {
@@ -24,8 +24,8 @@
     "clean": "rm -rf dist .turbo coverage"
   },
   "dependencies": {
-    "@kiln/core": "workspace:*",
-    "@kiln/shared": "workspace:*"
+    "@kilncraft/core": "workspace:*",
+    "@kilncraft/shared": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "26.6.6",

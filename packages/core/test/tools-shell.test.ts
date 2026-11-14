@@ -6,7 +6,7 @@ import { makeContext, makeTempDir, removeTempDir } from "./helpers";
 const directories: string[] = [];
 
 async function tempDir(): Promise<string> {
-  const directory = await makeTempDir("kiln-shell-");
+  const directory = await makeTempDir("kilncraft-shell-");
   directories.push(directory);
   return directory;
 }

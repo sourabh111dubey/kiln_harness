@@ -1,4 +1,4 @@
-export type KilnErrorCode =
+export type KilncraftErrorCode =
   | "invalid_argument"
   | "invalid_config"
   | "not_implemented"
@@ -15,22 +15,22 @@ export type KilnErrorCode =
   | "io_error"
   | "internal_error";
 
-export interface KilnErrorOptions {
+export interface KilncraftErrorOptions {
   details?: Record<string, unknown>;
   cause?: unknown;
   recoverable?: boolean;
   hint?: string;
 }
 
-export class KilnError extends Error {
-  readonly code: KilnErrorCode;
+export class KilncraftError extends Error {
+  readonly code: KilncraftErrorCode;
   readonly details: Record<string, unknown>;
   readonly recoverable: boolean;
   readonly hint?: string;
 
-  constructor(code: KilnErrorCode, message: string, options: KilnErrorOptions = {}) {
+  constructor(code: KilncraftErrorCode, message: string, options: KilncraftErrorOptions = {}) {
     super(message, { cause: options.cause });
-    this.name = "KilnError";
+    this.name = "KilncraftError";
     this.code = code;
     this.details = options.details ?? {};
     this.recoverable = options.recoverable ?? false;
@@ -50,50 +50,50 @@ export class KilnError extends Error {
   }
 }
 
-export function isKilnError(value: unknown): value is KilnError {
-  return value instanceof KilnError;
+export function isKilncraftError(value: unknown): value is KilncraftError {
+  return value instanceof KilncraftError;
 }
 
-export function toKilnError(
+export function toKilncraftError(
   error: unknown,
-  fallbackCode: KilnErrorCode = "internal_error",
-): KilnError {
-  if (isKilnError(error)) return error;
+  fallbackCode: KilncraftErrorCode = "internal_error",
+): KilncraftError {
+  if (isKilncraftError(error)) return error;
   if (error instanceof Error) {
     if (error.name === "AbortError" || (error as { code?: unknown }).code === "ABORT_ERR") {
-      return new KilnError("aborted", error.message, { cause: error });
+      return new KilncraftError("aborted", error.message, { cause: error });
     }
-    return new KilnError(fallbackCode, error.message, {
+    return new KilncraftError(fallbackCode, error.message, {
       cause: error,
       details: { name: error.name },
       recoverable: false,
     });
   }
-  return new KilnError(fallbackCode, String(error), {
+  return new KilncraftError(fallbackCode, String(error), {
     details: { value: String(error) },
     recoverable: false,
   });
 }
 
 export const errors = {
-  invalidArgument: (message: string, details?: Record<string, unknown>): KilnError =>
-    new KilnError("invalid_argument", message, { details }),
-  invalidConfig: (message: string, hint?: string): KilnError =>
-    new KilnError("invalid_config", message, { hint }),
-  notImplemented: (feature: string): KilnError =>
-    new KilnError("not_implemented", `${feature} is not implemented yet`, {
+  invalidArgument: (message: string, details?: Record<string, unknown>): KilncraftError =>
+    new KilncraftError("invalid_argument", message, { details }),
+  invalidConfig: (message: string, hint?: string): KilncraftError =>
+    new KilncraftError("invalid_config", message, { hint }),
+  notImplemented: (feature: string): KilncraftError =>
+    new KilncraftError("not_implemented", `${feature} is not implemented yet`, {
       hint: "See plan.md for the milestone that delivers this feature.",
     }),
-  providerError: (message: string, cause?: unknown): KilnError =>
-    new KilnError("provider_error", message, { cause, recoverable: true }),
-  toolError: (tool: string, message: string, details?: Record<string, unknown>): KilnError =>
-    new KilnError("tool_error", `${tool}: ${message}`, { details }),
-  permissionDenied: (message: string): KilnError =>
-    new KilnError("permission_denied", message, { recoverable: false }),
-  sessionNotFound: (sessionID: string): KilnError =>
-    new KilnError("session_not_found", `Session ${sessionID} was not found`, {
+  providerError: (message: string, cause?: unknown): KilncraftError =>
+    new KilncraftError("provider_error", message, { cause, recoverable: true }),
+  toolError: (tool: string, message: string, details?: Record<string, unknown>): KilncraftError =>
+    new KilncraftError("tool_error", `${tool}: ${message}`, { details }),
+  permissionDenied: (message: string): KilncraftError =>
+    new KilncraftError("permission_denied", message, { recoverable: false }),
+  sessionNotFound: (sessionID: string): KilncraftError =>
+    new KilncraftError("session_not_found", `Session ${sessionID} was not found`, {
       details: { sessionID },
     }),
-  aborted: (reason?: string): KilnError =>
-    new KilnError("aborted", reason ?? "Operation aborted", { recoverable: false }),
+  aborted: (reason?: string): KilncraftError =>
+    new KilncraftError("aborted", reason ?? "Operation aborted", { recoverable: false }),
 };

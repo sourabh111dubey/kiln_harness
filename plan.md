@@ -1,9 +1,9 @@
-# Kiln — Production Coding Agent
+# Kilncraft — Production Coding Agent
 
 **Status:** 1.0.0 release candidate — M5 complete
 **Last updated:** 2026-11-15
 **Runtime target:** Node.js ≥ 24 (validated on Node 26), TypeScript, pnpm 12
-**Codename:** `kiln` (CLI binary: `kiln`; packages: `@kiln/*`)
+**Codename:** `kilncraft` (CLI binary: `kilncraft`; packages: `@kilncraft/*`)
 
 > This document is the build specification. It is intentionally exhaustive: every
 > feature below is either **P0** (required for 1.0), **P1** (required for a
@@ -18,15 +18,15 @@ M0:
 
 - pnpm workspace, Turbo task graph, strict TypeScript, tsup builds, Biome,
   Vitest with coverage thresholds, Changesets, GitHub Actions CI.
-- `@kiln/shared`: ULID-style ids, typed errors, session/message/part/event
+- `@kilncraft/shared`: ULID-style ids, typed errors, session/message/part/event
   schemas, permission types, provider/tool contracts, usage/cost math, JSONC
   config loading with precedence and validation, structured logging, OTel
   tracer bootstrap, and generated `config.schema.json`.
-- `@kiln/cli`: `kiln --version`, `--help`, `models`, `config`, `doctor`.
+- `@kilncraft/cli`: `kilncraft --version`, `--help`, `models`, `config`, `doctor`.
 
 M1:
 
-- `@kiln/core`: provider registry with Anthropic, OpenAI-compatible (OpenAI,
+- `@kilncraft/core`: provider registry with Anthropic, OpenAI-compatible (OpenAI,
   OpenRouter, Ollama, custom), and Gemini streaming adapters; normalized SSE
   parsing; streaming agent loop with parallel read-only tools, abort, turn caps,
   and duplicate-input validation.
@@ -36,7 +36,7 @@ M1:
 - Built-in tools: `read`, `write`, `edit`, `glob`, `grep`, `ls`, `bash`,
   `todo_write`; atomic writes, unified diffs, timeouts, output truncation,
   environment scrubbing for shell commands.
-- `kiln run` with text/JSON output, config-driven model selection, provider
+- `kilncraft run` with text/JSON output, config-driven model selection, provider
   auto-discovery, and error hints.
 - Model catalog with context windows and pricing; cost accumulation per turn.
 
@@ -46,16 +46,16 @@ M2:
   fork, and delete; JSONL event mirror per session.
 - Resume (`--session`) and continue (`--continue`); the agent restores messages,
   usage, cost, and todos.
-- Checkpoint manager snapshots files before `write`/`edit`; `kiln undo` restores
+- Checkpoint manager snapshots files before `write`/`edit`; `kilncraft undo` restores
   the latest checkpoint.
 - Automatic context compaction at ~80% of the model context window, plus
   `sessions compact`.
-- Permission audit log with hashed inputs and readable summaries; `kiln audit`.
+- Permission audit log with hashed inputs and readable summaries; `kilncraft audit`.
 - CLI: `sessions list|show|export|search|fork|delete|compact`, `undo`, `audit`.
 
 M3:
 
-- `@kiln/tui` on Ink 8 + React 19.
+- `@kilncraft/tui` on Ink 8 + React 19.
 - Streaming transcript with assistant text, tool calls, diffs, terminal output,
   JSON, errors, and info entries.
 - Markdown renderer (headings, lists, code fences, inline formatting) and unified
@@ -66,30 +66,30 @@ M3:
   async `askPermission` hook; session picker; status bar with tokens/cost.
 - Slash commands: `/help`, `/clear`, `/new`, `/sessions`, `/model`, `/compact`,
   `/cost`, `/context`, `/doctor`, `/exit`.
-- Themes (`default`, `dim`, `highContrast`), `NO_COLOR`, and `KILN_THEME`.
-- `kiln` with no subcommand launches the TUI; `kiln run` remains headless.
+- Themes (`default`, `dim`, `highContrast`), `NO_COLOR`, and `KILNCRAFT_THEME`.
+- `kilncraft` with no subcommand launches the TUI; `kilncraft run` remains headless.
 
 M4:
 
-- `@kiln/server`: Hono daemon with JSON + SSE API, session CRUD, prompt streaming,
+- `@kilncraft/server`: Hono daemon with JSON + SSE API, session CRUD, prompt streaming,
   event replay, abort, compact, tools/models/info, OpenAPI document, optional bearer
   token, CORS, and a minimal browser page.
 - Async permission requests over SSE: the stream emits `permission.requested`; a
   client resolves it with `POST /sessions/:id/permissions/:requestID` and the turn
   resumes.
-- `@kiln/sdk`: in-process `createKiln()` with `createSession`, `prompt`,
+- `@kilncraft/sdk`: in-process `createKilncraft()` with `createSession`, `prompt`,
   `listSessions`, `getSession`, `deleteSession`, `exportSession`, `compact`, and
   plugin support.
-- `@kiln/plugin-sdk`: `Plugin`, hooks, tools, commands, and `definePlugin`.
+- `@kilncraft/plugin-sdk`: `Plugin`, hooks, tools, commands, and `definePlugin`.
 - Plugin loader (`loadPlugins`) and `PluginHost` hooks: `session.start`,
   `message.received`, `tool.before` (including `block`), `tool.after`, and `event`.
-- `@kiln/mcp`: MCP client for stdio and Streamable HTTP, tool discovery/namespacing,
-  JSON Schema passthrough, and an MCP stdio server exposing kiln tools.
-- CLI: `kiln serve`, `kiln mcp list`, `kiln mcp serve`.
+- `@kilncraft/mcp`: MCP client for stdio and Streamable HTTP, tool discovery/namespacing,
+  JSON Schema passthrough, and an MCP stdio server exposing kilncraft tools.
+- CLI: `kilncraft serve`, `kilncraft mcp list`, `kilncraft mcp serve`.
 
 M5:
 
-- Version `1.0.0` and publish metadata for all `@kiln/*` packages.
+- Version `1.0.0` and publish metadata for all `@kilncraft/*` packages.
 - Performance budget runner (`pnpm perf`, `pnpm perf:check`) measuring CLI cold
   start, bash spawn, 10k-event replay, 1k-message search, and RSS.
 - Fuzz/property tests (`fast-check`) for glob conversion, truncation, event parsing,
@@ -127,18 +127,18 @@ plugin-sdk = **161 tests**. Measured budgets on this machine:
 
 P1 completion:
 
-- **Sandbox** — `@kiln/sandbox` wraps bash with bubblewrap (Linux),
+- **Sandbox** — `@kilncraft/sandbox` wraps bash with bubblewrap (Linux),
   sandbox-exec (macOS), or Docker; `sandbox.enabled` is honored by CLI, server,
   SDK, and TUI.
 - **WebSocket** — `/ws` JSON bridge for session list/create, prompt streaming,
-  permission resolution, and abort; optional `KILN_TOKEN`.
+  permission resolution, and abort; optional `KILNCRAFT_TOKEN`.
 - **MCP HTTP** — stateless Streamable HTTP transport at `/mcp`; MCP client
   supports stdio and Streamable HTTP.
-- **LSP** — `@kiln/lsp` JSON-RPC client with diagnostics, document symbols,
+- **LSP** — `@kilncraft/lsp` JSON-RPC client with diagnostics, document symbols,
   didOpen, and shutdown; `lsp_diagnostics` and `lsp_symbols` tools.
-- **Eval** — `@kiln/eval` task runner, expected-file checks, scoring, and
+- **Eval** — `@kilncraft/eval` task runner, expected-file checks, scoring, and
   SWE-bench Lite / Terminal-Bench row adapters.
-- **Plugin reload** — SDK `kiln.reload()` re-reads config, reloads plugins, and
+- **Plugin reload** — SDK `kilncraft.reload()` re-reads config, reloads plugins, and
   clears cached agents.
 
 Tests: 33 shared + 94 core + 10 CLI + 16 TUI + 3 SDK + 5 server + 5 MCP + 1
@@ -157,23 +157,23 @@ native Windows sandbox (Docker/WSL2 fallback).
 
 ## 1. Executive summary
 
-We are building a full-stack, model-agnostic coding agent kiln. It is not a
+We are building a full-stack, model-agnostic coding agent runtime. It is not a
 single CLI script: it is an agent runtime with a clean client/server split,
 a terminal UI, an embeddable SDK, an HTTP/WebSocket API, a plugin system, MCP
-support, sandboxing, and a regression-eval kiln.
+support, sandboxing, and a regression-eval kilncraft.
 
 The product surface:
 
-| Surface             | Description                                | Priority |
-| ------------------- | ------------------------------------------ | -------- |
-| `kiln` (TUI)        | Interactive terminal coding agent          | P0       |
-| `kiln run`          | Non-interactive / scripted / CI mode       | P0       |
-| `kiln serve`        | Background daemon exposing HTTP + WS API   | P1       |
-| `@kiln/sdk`         | Embed the agent in other Node apps         | P1       |
-| `@kiln/plugin-sdk`  | Third-party tools, hooks, commands, themes | P1       |
-| MCP client + server | External tool/resource integration         | P1       |
-| `@kiln/web`         | Browser client for remote sessions         | P2       |
-| `@kiln/eval`        | Trajectory + benchmark regression suite    | P1       |
+| Surface                 | Description                                | Priority |
+| ----------------------- | ------------------------------------------ | -------- |
+| `kilncraft` (TUI)       | Interactive terminal coding agent          | P0       |
+| `kilncraft run`         | Non-interactive / scripted / CI mode       | P0       |
+| `kilncraft serve`       | Background daemon exposing HTTP + WS API   | P1       |
+| `@kilncraft/sdk`        | Embed the agent in other Node apps         | P1       |
+| `@kilncraft/plugin-sdk` | Third-party tools, hooks, commands, themes | P1       |
+| MCP client + server     | External tool/resource integration         | P1       |
+| `@kilncraft/web`        | Browser client for remote sessions         | P2       |
+| `@kilncraft/eval`       | Trajectory + benchmark regression suite    | P1       |
 
 Design principles:
 
@@ -223,7 +223,7 @@ Design principles:
 ┌────────────┐   stdio/IPC    ┌─────────────┐   HTTP/WS   ┌──────────────┐
 │  TUI (Ink) │ ─────────────► │  CLI client │ ──────────► │              │
 └────────────┘                └─────────────┘             │              │
-┌────────────┐                                          │  kiln     │
+┌────────────┐                                          │  kilncraft     │
 │  SDK / app │ ─────────────► in-process ──────────────► │  daemon      │
 └────────────┘                                          │ (server)     │
 ┌────────────┐                                          │              │
@@ -252,25 +252,25 @@ Design principles:
 ### 3.2 Package graph
 
 ```
-@kiln/shared          types, zod schemas, errors, ids, event contracts
-@kiln/core            agent loop, sessions, providers, tools, permissions
-@kiln/provider-*      per-provider adapters (or one package with subpaths)
-@kiln/tools           built-in tool implementations
-@kiln/sandbox         OS sandbox adapters + policy
-@kiln/lsp             language-server client
-@kiln/mcp             MCP client + MCP server
-@kiln/plugin-sdk      public plugin API + loader
-@kiln/server          Hono HTTP + WS, OpenAPI, daemon lifecycle
-@kiln/cli             command parser, client wiring, auth, config commands
-@kiln/tui             Ink terminal UI
-@kiln/sdk             embeddable facade (re-exports core + server)
-@kiln/web             optional browser client (P2)
-@kiln/eval            benchmark runner, scorers, fixture corpus
-@kiln/test-utils      mock providers, fixtures, in-memory stores
+@kilncraft/shared          types, zod schemas, errors, ids, event contracts
+@kilncraft/core            agent loop, sessions, providers, tools, permissions
+@kilncraft/provider-*      per-provider adapters (or one package with subpaths)
+@kilncraft/tools           built-in tool implementations
+@kilncraft/sandbox         OS sandbox adapters + policy
+@kilncraft/lsp             language-server client
+@kilncraft/mcp             MCP client + MCP server
+@kilncraft/plugin-sdk      public plugin API + loader
+@kilncraft/server          Hono HTTP + WS, OpenAPI, daemon lifecycle
+@kilncraft/cli             command parser, client wiring, auth, config commands
+@kilncraft/tui             Ink terminal UI
+@kilncraft/sdk             embeddable facade (re-exports core + server)
+@kilncraft/web             optional browser client (P2)
+@kilncraft/eval            benchmark runner, scorers, fixture corpus
+@kilncraft/test-utils      mock providers, fixtures, in-memory stores
 ```
 
 Dependency rule: `tui`/`cli`/`server` → `core` → `shared`. `tools`, `sandbox`,
-`lsp`, `mcp` are siblings injected into `core` via a `KilnContext`. No cycles.
+`lsp`, `mcp` are siblings injected into `core` via a `KilncraftContext`. No cycles.
 `plugin-sdk` depends only on `shared`.
 
 ---
@@ -278,7 +278,7 @@ Dependency rule: `tui`/`cli`/`server` → `core` → `shared`. `tools`, `sandbox
 ## 4. Repository layout
 
 ```
-kiln/
+kilncraft/
 ├── plan.md
 ├── package.json                  # workspace root, scripts, engines
 ├── pnpm-workspace.yaml
@@ -350,7 +350,7 @@ kiln/
 | Git             | Not integrated yet                                    | `execFile` + system git planned                 |
 | LSP             | `vscode-languageserver-protocol` + custom client      | Spawn stdio servers                             |
 | Observability   | `pino` logs + OpenTelemetry SDK                       | Traces, metrics, cost                           |
-| Packaging       | npm + standalone binaries + Docker + Homebrew         | `npx kiln`, `brew install`, `docker run`        |
+| Packaging       | npm + standalone binaries + Docker + Homebrew         | `npx kilncraft`, `brew install`, `docker run`   |
 
 Notes:
 
@@ -365,7 +365,7 @@ Notes:
 
 ## 6. Domain model
 
-All entities live in `@kiln/shared`. IDs are prefixed ULIDs (time-sortable).
+All entities live in `@kilncraft/shared`. IDs are prefixed ULIDs (time-sortable).
 
 ```ts
 type SessionID = `ses_${string}`;
@@ -400,7 +400,7 @@ interface Message {
   createdAt: string;
   modelID?: string;
   usage?: Usage;
-  error?: KilnError;
+  error?: KilncraftError;
 }
 
 type Part =
@@ -435,7 +435,7 @@ type ToolOutput =
 ### 6.1 Event log (append-only)
 
 ```ts
-type KilnEvent =
+type KilncraftEvent =
   | { type: "session.created"; session: Session }
   | { type: "session.updated"; patch: Partial<Session> }
   | { type: "session.status"; status: Session["status"]; reason?: string }
@@ -451,13 +451,13 @@ type KilnEvent =
   | { type: "compaction.started"; reason: string; tokensBefore: number }
   | { type: "compaction.completed"; summary: string; tokensAfter: number }
   | { type: "checkpoint.created"; hash: string; label: string }
-  | { type: "error"; error: KilnError; recoverable: boolean }
+  | { type: "error"; error: KilncraftError; recoverable: boolean }
   | { type: "session.archived"; sessionID: SessionID };
 ```
 
-- Persist as JSONL (`~/.kiln/sessions/<id>/events.jsonl`) + a SQLite index
+- Persist as JSONL (`~/.kilncraft/sessions/<id>/events.jsonl`) + a SQLite index
   for queries. Replay reconstructs the exact in-memory state.
-- Checkpoints are git snapshots; `kiln undo` restores.
+- Checkpoints are git snapshots; `kilncraft undo` restores.
 
 ---
 
@@ -567,8 +567,8 @@ interface ProviderAdapter {
   snapshot for offline.
 - **Fallback chains:** primary → secondary → local, triggered by auth/quota/5xx,
   configurable per session. Fallback emits a visible warning.
-- **Auth:** env (`ANTHROPIC_API_KEY`, etc.), `kiln auth login` OAuth/device
-  flow, OS keychain, or `~/.kiln/credentials.json` (0600). Never log secrets;
+- **Auth:** env (`ANTHROPIC_API_KEY`, etc.), `kilncraft auth login` OAuth/device
+  flow, OS keychain, or `~/.kilncraft/credentials.json` (0600). Never log secrets;
   redact by default.
 - **Cost tracking:** tokens × per-model input/output/cache rates, accumulated per
   session and per turn; surfaced in TUI status line and `/cost`.
@@ -579,7 +579,7 @@ interface ProviderAdapter {
 
 Every tool has: stable id, Zod input schema, JSON Schema export, `readOnly`
 flag, `parallelizable` flag, timeout, permission default, and a concise model
-description. Tools are namespaced (`kiln_read`, `mcp_<server>_<tool>`).
+description. Tools are namespaced (`kilncraft_read`, `mcp_<server>_<tool>`).
 
 ### 9.1 Built-in tools
 
@@ -694,7 +694,7 @@ interface PermissionPolicy {
 
 - Sandbox policy: read-only root FS, writable workspace/tmp, no network by default
   for shell (configurable), CPU/memory/time limits, PID limit, no new privileges.
-- `kiln doctor` verifies the sandbox actually works (escape test, network test).
+- `kilncraft doctor` verifies the sandbox actually works (escape test, network test).
 - Sandbox failure = deny execution with actionable error.
 
 ---
@@ -711,7 +711,7 @@ interface PermissionPolicy {
   file tree is capped; `AGENTS.md` injected fully.
 - **Micro-compaction:** when a single tool result is oversized, replace with a
   summary + pointer rather than compacting the whole session.
-- **Manual controls:** `/compact`, `/clear`, `/context`, `kiln compact`.
+- **Manual controls:** `/compact`, `/clear`, `/context`, `kilncraft compact`.
 - **Prompt caching:** stable prefix ordering; cache-friendly breakpoints for
   Anthropic; usage deltas reported.
 
@@ -722,7 +722,7 @@ interface PermissionPolicy {
 - Store layout:
 
 ```
-~/.kiln/
+~/.kilncraft/
 ├── sessions/<sessionID>/
 │   ├── meta.json
 │   ├── events.jsonl
@@ -736,10 +736,10 @@ interface PermissionPolicy {
 └── config.json           # user-level config
 ```
 
-- **Resume:** `kiln --resume <id>`, `--continue` (latest in cwd), TUI session
+- **Resume:** `kilncraft --resume <id>`, `--continue` (latest in cwd), TUI session
   picker.
 - **Fork:** branch a session from any message (copy-on-write event log).
-- **Export:** `kiln export <id> --format md|json|html`.
+- **Export:** `kilncraft export <id> --format md|json|html`.
 - **Search:** full-text over messages/tool output (SQLite FTS5).
 - **Retention:** configurable TTL; auto-archive idle sessions.
 - **Recovery:** WAL + periodic snapshot; replay events on startup; corrupt tail
@@ -752,8 +752,8 @@ interface PermissionPolicy {
 ## 13. Git integration
 
 - Repo detection (`.git` upward), worktree support, submodule awareness.
-- Per-session optional worktree at `~/.kiln/worktrees/<sessionID>` with branch
-  `kiln/<slug>`; cleanup policy on archive.
+- Per-session optional worktree at `~/.kilncraft/worktrees/<sessionID>` with branch
+  `kilncraft/<slug>`; cleanup policy on archive.
 - Diff rendering in TUI with syntax highlighting and intra-line changes.
 - Checkpoint before risky operations; one-command revert.
 - Commit workflow: `git_commit` builds message from staged diff, runs hooks,
@@ -799,8 +799,8 @@ interface PermissionPolicy {
 - Features: tool/resource/prompt discovery, namespacing, capability filtering,
   connection status, per-server enable/disable, timeouts, retries, health checks,
   OAuth 2.1 + PKCE with token refresh, header/env interpolation (`{env:VAR}`).
-- MCP server mode: `kiln mcp serve` exposes built-in tools over stdio/HTTP so
-  other agents can use this kiln as a tool provider.
+- MCP server mode: `kilncraft mcp serve` exposes built-in tools over stdio/HTTP so
+  other agents can use this kilncraft as a tool provider.
 - Trust: servers are untrusted by default; destructive tools require permission;
   server instructions are labeled and never override system rules.
 
@@ -840,7 +840,7 @@ interface Plugin {
 
 - Markdown files with YAML frontmatter: `name`, `description`, `when`, `tools`,
   `model`.
-- Discovery: `~/.kiln/skills/`, `.kiln/skills/`, plugin-provided.
+- Discovery: `~/.kilncraft/skills/`, `.kilncraft/skills/`, plugin-provided.
 - Only name+description injected by default; `skill_load` pulls the body on
   demand (context-efficient).
 - Skills can declare required binaries and fail with an actionable message.
@@ -857,7 +857,7 @@ interface Plugin {
 
 ### 16.4 Memory
 
-- Hierarchy: user `~/.kiln/memory/*.md` → project `AGENTS.md` /
+- Hierarchy: user `~/.kilncraft/memory/*.md` → project `AGENTS.md` /
   `KILN.md` → subdirectory overrides.
 - `memory_write` dedupes and appends with timestamps; `/memory` to view/edit.
 - Memory is capped (default 20k tokens) with LRU eviction.
@@ -907,20 +907,20 @@ interface Plugin {
 ## 19. CLI specification
 
 ```
-kiln [options] [prompt]          # TUI (default)
-kiln run [options] [prompt]      # non-interactive
-kiln exec [options] [prompt]     # alias for run, CI-friendly
-kiln serve [options]             # daemon
-kiln auth {login,logout,status}
-kiln models {list,search,default}
-kiln mcp {list,add,remove,auth,serve}
-kiln plugins {list,install,remove}
-kiln sessions {list,show,export,delete,compact}
-kiln config {get,set,path,edit,schema}
-kiln eval {run,report}
-kiln doctor
-kiln update {check,install}
-kiln completion {bash,zsh,fish}
+kilncraft [options] [prompt]          # TUI (default)
+kilncraft run [options] [prompt]      # non-interactive
+kilncraft exec [options] [prompt]     # alias for run, CI-friendly
+kilncraft serve [options]             # daemon
+kilncraft auth {login,logout,status}
+kilncraft models {list,search,default}
+kilncraft mcp {list,add,remove,auth,serve}
+kilncraft plugins {list,install,remove}
+kilncraft sessions {list,show,export,delete,compact}
+kilncraft config {get,set,path,edit,schema}
+kilncraft eval {run,report}
+kilncraft doctor
+kilncraft update {check,install}
+kilncraft completion {bash,zsh,fish}
 ```
 
 Global flags:
@@ -955,7 +955,7 @@ Headless contract:
 ## 20. Server and API
 
 - Hono server; HTTP/1.1 + WebSocket; optional HTTPS; bearer token for remote.
-- Daemon lifecycle: `kiln serve` starts or attaches; Unix socket on POSIX,
+- Daemon lifecycle: `kilncraft serve` starts or attaches; Unix socket on POSIX,
   named pipe on Windows; PID + health file; `service status|restart|stop`.
 - OpenAPI 3.1 generated from Zod; `/openapi.json`; interactive docs at `/docs`.
 - Core endpoints:
@@ -997,22 +997,22 @@ WS     /ws                            # bidirectional events + input
 ## 21. SDK
 
 ```ts
-import { createKiln } from "@kiln/sdk";
+import { createKilncraft } from "@kilncraft/sdk";
 
-const kiln = createKiln({
+const kilncraft = createKilncraft({
   cwd: process.cwd(),
   model: "anthropic/claude-sonnet-4-5",
   permissionMode: "acceptEdits",
 });
 
-const session = await kiln.session.create();
+const session = await kilncraft.session.create();
 for await (const event of session.prompt("Fix the failing test")) {
   if (event.type === "message.part.updated") render(event.part);
 }
 ```
 
 - Embeds the core in-process (no socket), reuses plugin/tool/MCP registries.
-- Exposes `Kiln`, `Session`, `ToolRegistry`, `PermissionPolicy`,
+- Exposes `Kilncraft`, `Session`, `ToolRegistry`, `PermissionPolicy`,
   `ProviderRegistry`, `EventStream`.
 - Framework-agnostic; works in Node, Bun, Electron main, edge runtimes with
   documented limits (no shell sandbox).
@@ -1022,15 +1022,15 @@ for await (const event of session.prompt("Fix the failing test")) {
 
 ## 22. Configuration
 
-Precedence (low → high): defaults → user `~/.kiln/config.json` → project
-`.kiln/config.json` → `.kiln/config.local.json` → env (`KILN_*`) → CLI
+Precedence (low → high): defaults → user `~/.kilncraft/config.json` → project
+`.kilncraft/config.json` → `.kilncraft/config.local.json` → env (`KILNCRAFT_*`) → CLI
 flags.
 
 Schema highlights:
 
 ```json
 {
-  "$schema": "https://kiln.dev/config.schema.json",
+  "$schema": "https://kilncraft.dev/config.schema.json",
   "model": "anthropic/claude-sonnet-4-5",
   "small_model": "anthropic/claude-haiku-4-5",
   "agent": "build",
@@ -1051,8 +1051,8 @@ Schema highlights:
 - Validated with Zod; published JSON Schema; editor autocomplete.
 - Hot reload via `fs.watch` (debounced); invalid config logs and keeps last good.
 - Secrets use `{env:VAR}` interpolation; never written to config in plaintext.
-- `kiln config edit` opens `$EDITOR`; `config schema` prints the schema.
-- Project-local CLI preferences live in `.kiln/cli.json`.
+- `kilncraft config edit` opens `$EDITOR`; `config schema` prints the schema.
+- Project-local CLI preferences live in `.kilncraft/cli.json`.
 
 ---
 
@@ -1063,16 +1063,16 @@ Schema highlights:
 - OpenTelemetry: spans for turn → provider call → tool execution; metrics for
   latency, tokens, cost, errors; optional OTLP exporter.
 - Session replay: `--replay <id>` re-emits events to a file for debugging.
-- Cost dashboard: `/cost`, `kiln sessions show --cost`, JSON export.
+- Cost dashboard: `/cost`, `kilncraft sessions show --cost`, JSON export.
 - Telemetry opt-in, anonymous, PII-free; explicit consent screen on first run;
-  `KILN_TELEMETRY=0` disables.
-- Crash reporting opt-in with redaction; `kiln doctor` collects diagnostics.
+  `KILNCRAFT_TELEMETRY=0` disables.
+- Crash reporting opt-in with redaction; `kilncraft doctor` collects diagnostics.
 
 ---
 
-## 24. Evaluation kiln
+## 24. Evaluation kilncraft
 
-Even an agent kiln needs its own regression tests.
+Even an agent kilncraft needs its own regression tests.
 
 - **Golden transcripts:** fixture prompts + mocked provider streams → expected
   event sequences/tool calls; snapshot-tested.
@@ -1104,7 +1104,7 @@ Even an agent kiln needs its own regression tests.
 | TUI         | ink-testing-library + snapshots    | Rendering, keybindings, streaming                             |
 | API         | Hono test client                   | Routes, auth, SSE, WS                                         |
 | E2E         | Playwright (web) + CLI scripts     | User flows                                                    |
-| Eval        | `@kiln/eval`                       | Trajectory quality                                            |
+| Eval        | `@kilncraft/eval`                  | Trajectory quality                                            |
 
 Quality gates: 100% type-check, lint clean, unit ≥ 85% lines on core, all P0
 paths covered, no flaky tests (retry budget 0 in CI), mutation testing on the
@@ -1121,10 +1121,10 @@ policy engine and patch parser.
 - Release: changesets → version bump → build binaries → npm publish → Homebrew
   formula → Docker image → GitHub release notes.
 - Distribution:
-  - `npm i -g kiln` / `npx kiln`
+  - `npm i -g kilncraft` / `npx kilncraft`
   - standalone binaries (Linux x64/arm64, macOS x64/arm64, Windows x64)
-  - `docker run -it --rm -v $PWD:/work kiln`
-  - `brew install kiln`
+  - `docker run -it --rm -v $PWD:/work kilncraft`
+  - `brew install kilncraft`
 - Update mechanism: version check (cached 24h), signed manifest, rollback.
 - Branching: `main` protected; conventional commits; trunk-based; release tags
   `vX.Y.Z`.
@@ -1144,7 +1144,7 @@ policy engine and patch parser.
 - Example plugins, MCP servers, SDK embeds under `examples/`.
 - Contributing guide, code of conduct, security policy, issue templates.
 - Changelog generated from changesets; migration guides for breaking changes.
-- `kiln doctor` for environment diagnostics; `kiln --explain <error>` for
+- `kilncraft doctor` for environment diagnostics; `kilncraft --explain <error>` for
   actionable hints.
 
 ---
@@ -1156,8 +1156,8 @@ Durations are estimates for one senior engineer; adjust for team size.
 ### M0 — Foundation (Week 1)
 
 - Monorepo, tsconfig, Biome, Vitest, CI skeleton, changesets.
-- `@kiln/shared` schemas/events/errors; JSON Schema generation.
-- `kiln --version`, `doctor` stub, structured logging.
+- `@kilncraft/shared` schemas/events/errors; JSON Schema generation.
+- `kilncraft --version`, `doctor` stub, structured logging.
 - **Acceptance:** `pnpm build && pnpm test && pnpm lint` green in CI.
 
 ### M1 — Agent core (Weeks 2–3)
@@ -1165,7 +1165,7 @@ Durations are estimates for one senior engineer; adjust for team size.
 - Provider registry + Anthropic/OpenAI/Gemini/Ollama adapters.
 - Agent loop, streaming, tool registry, permission engine.
 - Tools: read, write, edit, glob, grep, ls, bash, todo.
-- CLI `kiln run` + `--print` + JSON output; config loading.
+- CLI `kilncraft run` + `--print` + JSON output; config loading.
 - **Acceptance:** non-interactive agent edits a file, runs tests, and reports
   results on a fixture repo with mocked + real provider.
 
@@ -1205,8 +1205,8 @@ Durations are estimates for one senior engineer; adjust for team size.
 ### M6 — Server, SDK, ecosystem (Weeks 11–12)
 
 - Daemon, HTTP/WS API, OpenAPI, auth, remote access.
-- `@kiln/sdk` embed + examples.
-- `@kiln/plugin-sdk` published; plugin registry docs.
+- `@kilncraft/sdk` embed + examples.
+- `@kilncraft/plugin-sdk` published; plugin registry docs.
 - Optional web client (P2) behind a flag.
 - **Acceptance:** TUI connects to daemon over WS; SDK app drives a session;
   API passes contract tests; remote access requires auth.
@@ -1231,10 +1231,10 @@ Durations are estimates for one senior engineer; adjust for team size.
 - [ ] Biome config + pre-commit hook (lefthook)
 - [ ] Vitest + coverage thresholds
 - [ ] Changesets + release workflow
-- [ ] `@kiln/shared`: events, schemas, errors, ids
+- [ ] `@kilncraft/shared`: events, schemas, errors, ids
 - [ ] JSON Schema generation script
 - [ ] Structured logging + OTel bootstrap
-- [ ] `kiln --version`, `--help`, `doctor`
+- [ ] `kilncraft --version`, `--help`, `doctor`
 
 ### Core
 
@@ -1437,7 +1437,7 @@ Release gate:
 
 ## 34. Open decisions
 
-1. **Name/branding:** `kiln` is a placeholder; confirm before package publish.
+1. **Name/branding:** `kilncraft` is a placeholder; confirm before package publish.
 2. **Provider abstraction:** hand-rolled HTTP/SSE adapters were selected over the
    Vercel AI SDK for exact control over tool-call streaming, retries, and cost.
    Revisit if provider coverage grows beyond the current set.

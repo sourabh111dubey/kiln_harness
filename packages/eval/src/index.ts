@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { type Agent, isPathInside, type TurnResult } from "@kiln/core";
+import { type Agent, isPathInside, type TurnResult } from "@kilncraft/core";
 
 export interface EvalTask {
   id: string;

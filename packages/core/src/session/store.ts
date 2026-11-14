@@ -13,12 +13,12 @@ import {
   emptyUsage,
   ids,
   isPrefixedId,
-  KilnError,
-  type KilnEvent,
-  kilnEventSchema,
+  KilncraftError,
+  type KilncraftEvent,
+  kilncraftEventSchema,
   type Session,
-  toKilnError,
-} from "@kiln/shared";
+  toKilncraftError,
+} from "@kilncraft/shared";
 
 const sqlite = process.getBuiltinModule("node:sqlite") as typeof import("node:sqlite");
 const DatabaseSync = sqlite.DatabaseSync;
@@ -67,7 +67,7 @@ interface SessionRow {
 }
 
 export function resolveDataDir(env: NodeJS.ProcessEnv = process.env): string {
-  return env.KILN_DATA_DIR ? resolve(env.KILN_DATA_DIR) : join(homedir(), ".kiln");
+  return env.KILNCRAFT_DATA_DIR ? resolve(env.KILNCRAFT_DATA_DIR) : join(homedir(), ".kilncraft");
 }
 
 function now(): string {
@@ -296,9 +296,9 @@ export class SessionStore {
     }
   }
 
-  appendEvent(sessionID: string, event: KilnEvent): void {
+  appendEvent(sessionID: string, event: KilncraftEvent): void {
     if (!isPrefixedId(sessionID, "ses")) {
-      throw new KilnError("invalid_argument", `Invalid session id: ${sessionID}`);
+      throw new KilncraftError("invalid_argument", `Invalid session id: ${sessionID}`);
     }
     const seq = this.nextSequence("events", sessionID);
     this.db
@@ -312,13 +312,13 @@ export class SessionStore {
     appendFileSync(join(directory, "events.jsonl"), `${JSON.stringify(event)}\n`, "utf8");
   }
 
-  readEvents(sessionID: string): KilnEvent[] {
+  readEvents(sessionID: string): KilncraftEvent[] {
     const rows = this.db
       .prepare("SELECT data FROM events WHERE session_id = ? ORDER BY seq ASC")
       .all(sessionID) as Array<{ data: string }>;
-    const events: KilnEvent[] = [];
+    const events: KilncraftEvent[] = [];
     for (const row of rows) {
-      const parsed = kilnEventSchema.safeParse(JSON.parse(row.data));
+      const parsed = kilncraftEventSchema.safeParse(JSON.parse(row.data));
       if (parsed.success) events.push(parsed.data);
     }
     return events;
@@ -347,7 +347,7 @@ export class SessionStore {
   export(sessionID: string, format: ExportFormat = "json"): string {
     const session = this.get(sessionID);
     if (!session) {
-      throw new KilnError("session_not_found", `Session ${sessionID} was not found`, {
+      throw new KilncraftError("session_not_found", `Session ${sessionID} was not found`, {
         details: { sessionID },
       });
     }
@@ -415,7 +415,7 @@ export class SessionStore {
     try {
       metadata = JSON.parse(row.metadata) as Record<string, unknown>;
     } catch (error) {
-      throw toKilnError(error, "internal_error");
+      throw toKilncraftError(error, "internal_error");
     }
 
     return {
@@ -452,7 +452,7 @@ export function readSessionFile(
 ): string | undefined {
   const safeName = basename(filename);
   if (safeName !== filename || safeName === "." || safeName === "..") {
-    throw new KilnError("invalid_argument", `Invalid session file name: ${filename}`);
+    throw new KilncraftError("invalid_argument", `Invalid session file name: ${filename}`);
   }
   const path = join(store.sessionDirectory(sessionID), safeName);
   if (!existsSync(path)) return undefined;
@@ -467,7 +467,7 @@ export function writeSessionFile(
 ): void {
   const safeName = basename(filename);
   if (safeName !== filename || safeName === "." || safeName === "..") {
-    throw new KilnError("invalid_argument", `Invalid session file name: ${filename}`);
+    throw new KilncraftError("invalid_argument", `Invalid session file name: ${filename}`);
   }
   const directory = store.sessionDirectory(sessionID);
   mkdirSync(directory, { recursive: true });

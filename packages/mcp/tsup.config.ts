@@ -10,5 +10,5 @@ export default defineConfig({
   clean: true,
   splitting: false,
   treeshake: true,
-  external: ["@kiln/core", "@kiln/shared", "@modelcontextprotocol/sdk", "zod"],
+  external: ["@kilncraft/core", "@kilncraft/shared", "@modelcontextprotocol/sdk", "zod"],
 });

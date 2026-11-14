@@ -1,4 +1,4 @@
-import type { StreamRequest } from "@kiln/shared";
+import type { StreamRequest } from "@kilncraft/shared";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { GeminiProvider } from "../src/provider/gemini";
 import { collect, sseResponse } from "./helpers";

@@ -1,14 +1,14 @@
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createLogger, type Plugin } from "@kiln/shared";
+import { createLogger, type Plugin } from "@kilncraft/shared";
 import { afterEach, describe, expect, it } from "vitest";
 import { loadPlugins, PluginHost } from "../src/plugin/host";
 
 const directories: string[] = [];
 
 async function tempDir(): Promise<string> {
-  const directory = await mkdtemp(join(tmpdir(), "kiln-plugin-"));
+  const directory = await mkdtemp(join(tmpdir(), "kilncraft-plugin-"));
   directories.push(directory);
   return directory;
 }

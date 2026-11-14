@@ -1,5 +1,5 @@
 {
-  "name": "@kiln/plugin-sdk",
+  "name": "@kilncraft/plugin-sdk",
   "version": "1.0.0",
   "private": false,
   "type": "module",
@@ -21,7 +21,7 @@
     "clean": "rm -rf dist .turbo coverage"
   },
   "dependencies": {
-    "@kiln/shared": "workspace:*"
+    "@kilncraft/shared": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "26.6.6",

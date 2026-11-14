@@ -4,7 +4,7 @@ coverage
 .turbo
 .git
 .github
-.kiln
+.kilncraft
 *.log
 .env
 .env.*

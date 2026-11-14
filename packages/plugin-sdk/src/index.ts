@@ -1,4 +1,10 @@
-import type { Plugin, PluginCommand, PluginContext, PluginHooks, PluginModule } from "@kiln/shared";
+import type {
+  Plugin,
+  PluginCommand,
+  PluginContext,
+  PluginHooks,
+  PluginModule,
+} from "@kilncraft/shared";
 
 export type { Plugin, PluginCommand, PluginContext, PluginHooks, PluginModule };
 

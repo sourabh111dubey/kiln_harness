@@ -1,4 +1,4 @@
-import type { StreamRequest } from "@kiln/shared";
+import type { StreamRequest } from "@kilncraft/shared";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { OpenAIProvider } from "../src/provider/openai";
 import { collect, sseResponse } from "./helpers";
@@ -129,15 +129,15 @@ describe("openai-compatible provider", () => {
         id: "openrouter",
         apiKey: "test",
         baseURL: "https://openrouter.ai/api/v1",
-        headers: { "HTTP-Referer": "https://kiln.dev", "X-Title": "kiln" },
+        headers: { "HTTP-Referer": "https://kilncraft.dev", "X-Title": "kilncraft" },
       }).stream(request),
     );
 
     const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
     const headers = new Headers(init.headers);
     expect(headers.get("authorization")).toBe("Bearer test");
-    expect(headers.get("http-referer")).toBe("https://kiln.dev");
-    expect(headers.get("x-title")).toBe("kiln");
+    expect(headers.get("http-referer")).toBe("https://kilncraft.dev");
+    expect(headers.get("x-title")).toBe("kilncraft");
   });
 
   it("throws a provider error on HTTP failure", async () => {

@@ -1,7 +1,7 @@
 import { type Dirent, existsSync } from "node:fs";
 import { mkdir, readdir, readFile, realpath, rename, rm, stat, writeFile } from "node:fs/promises";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
-import { KilnError, type ToolOutput, toKilnError } from "@kiln/shared";
+import { KilncraftError, type ToolOutput, toKilncraftError } from "@kilncraft/shared";
 import { createTwoFilesPatch } from "diff";
 
 export const DEFAULT_IGNORE = new Set([
@@ -11,7 +11,7 @@ export const DEFAULT_IGNORE = new Set([
   "build",
   "coverage",
   ".turbo",
-  ".kiln",
+  ".kilncraft",
   ".next",
   ".nuxt",
   "target",
@@ -27,7 +27,7 @@ export const GLOB_IGNORE = [
   "**/build/**",
   "**/coverage/**",
   "**/.turbo/**",
-  "**/.kiln/**",
+  "**/.kilncraft/**",
   "**/.next/**",
   "**/target/**",
   "**/vendor/**",
@@ -46,10 +46,14 @@ export function isPathInside(cwd: string, target: string): boolean {
 
 export function assertInsideWorkspace(cwd: string, target: string): void {
   if (!isPathInside(cwd, target)) {
-    throw new KilnError("permission_denied", `Path ${target} is outside the workspace ${cwd}`, {
-      details: { cwd, target },
-      recoverable: false,
-    });
+    throw new KilncraftError(
+      "permission_denied",
+      `Path ${target} is outside the workspace ${cwd}`,
+      {
+        details: { cwd, target },
+        recoverable: false,
+      },
+    );
   }
 }
 
@@ -66,7 +70,7 @@ export async function assertRealInside(cwd: string, target: string): Promise<voi
   }
 
   if (!isPathInside(realCwd, realTarget)) {
-    throw new KilnError(
+    throw new KilncraftError(
       "permission_denied",
       `Path ${target} resolves outside the workspace ${cwd}`,
       { details: { cwd, target, realTarget }, recoverable: false },
@@ -83,14 +87,14 @@ export async function readTextFile(path: string, maxBytes = 2_000_000): Promise<
   try {
     info = await stat(path);
   } catch (error) {
-    throw toKilnError(error, "io_error");
+    throw toKilncraftError(error, "io_error");
   }
 
   if (!info.isFile()) {
-    throw new KilnError("io_error", `Not a file: ${path}`);
+    throw new KilncraftError("io_error", `Not a file: ${path}`);
   }
   if (info.size > maxBytes) {
-    throw new KilnError("io_error", `File is too large: ${path} (${info.size} bytes)`, {
+    throw new KilncraftError("io_error", `File is too large: ${path} (${info.size} bytes)`, {
       details: { path, size: info.size, maxBytes },
     });
   }
@@ -99,11 +103,11 @@ export async function readTextFile(path: string, maxBytes = 2_000_000): Promise<
   try {
     buffer = await readFile(path);
   } catch (error) {
-    throw toKilnError(error, "io_error");
+    throw toKilncraftError(error, "io_error");
   }
 
   if (isBinary(buffer)) {
-    throw new KilnError("io_error", `File appears to be binary: ${path}`);
+    throw new KilncraftError("io_error", `File appears to be binary: ${path}`);
   }
   return buffer.toString("utf8");
 }
@@ -132,7 +136,7 @@ export function diffText(path: string, before: string, after: string): string {
 
 export async function atomicWrite(path: string, content: string): Promise<void> {
   await mkdir(dirname(path), { recursive: true });
-  const temporary = `${path}.kiln-tmp-${process.pid}-${Date.now()}`;
+  const temporary = `${path}.kilncraft-tmp-${process.pid}-${Date.now()}`;
   await writeFile(temporary, content, "utf8");
   try {
     await rename(temporary, path);
@@ -141,7 +145,7 @@ export async function atomicWrite(path: string, content: string): Promise<void> 
       (error as NodeJS.ErrnoException).code === "EPERM" ||
       (error as NodeJS.ErrnoException).code === "EEXIST"
     ) {
-      const backup = `${path}.kiln-bak-${process.pid}-${Date.now()}`;
+      const backup = `${path}.kilncraft-bak-${process.pid}-${Date.now()}`;
       if (existsSync(path)) await rename(path, backup);
       try {
         await rename(temporary, path);

@@ -1,4 +1,4 @@
-import type { ToolDefinition } from "@kiln/shared";
+import type { ToolDefinition } from "@kilncraft/shared";
 import { z } from "zod";
 
 export const todoSchema = z.object({

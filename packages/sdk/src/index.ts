@@ -14,23 +14,23 @@ import {
   SessionStore,
   type ToolRegistry,
   type TurnResult,
-} from "@kiln/core";
-import { LspManager, type LspServerConfig } from "@kiln/lsp";
-import { createSandbox } from "@kiln/sandbox";
+} from "@kilncraft/core";
+import { LspManager, type LspServerConfig } from "@kilncraft/lsp";
+import { createSandbox } from "@kilncraft/sandbox";
 import {
   createLogger,
-  type KilnConfig,
-  KilnError,
+  type KilncraftConfig,
+  KilncraftError,
   loadConfig,
   type PermissionDecision,
   type PermissionMode,
   parseModelRef,
   type Session,
-} from "@kiln/shared";
+} from "@kilncraft/shared";
 
 type Logger = ReturnType<typeof createLogger>;
 
-export interface KilnOptions {
+export interface KilncraftOptions {
   cwd?: string;
   model?: string;
   dataDir?: string;
@@ -58,7 +58,7 @@ export interface PromptOptions {
   permissionMode?: PermissionMode;
 }
 
-export class Kiln {
+export class Kilncraft {
   readonly store: SessionStore;
   private readonly registry: ProviderRegistry;
   private tools: ToolRegistry;
@@ -70,16 +70,16 @@ export class Kiln {
   private readonly agents = new Map<string, Agent>();
   private readonly running = new Set<string>();
   private readonly lspManagers = new Set<LspManager>();
-  private configPromise: Promise<KilnConfig>;
+  private configPromise: Promise<KilncraftConfig>;
   private pluginsPromise: Promise<PluginHost | undefined>;
 
-  constructor(private readonly options: KilnOptions = {}) {
+  constructor(private readonly options: KilncraftOptions = {}) {
     this.env = options.env ?? process.env;
     this.cwd = resolve(options.cwd ?? process.cwd());
     this.store = new SessionStore({ dataDir: options.dataDir });
     this.registry = options.registry ?? createDefaultProviderRegistry(this.env);
     this.tools = options.tools ?? createDefaultToolRegistry();
-    this.logger = options.logger ?? createLogger({ level: this.env.KILN_LOG_LEVEL ?? "info" });
+    this.logger = options.logger ?? createLogger({ level: this.env.KILNCRAFT_LOG_LEVEL ?? "info" });
     this.audit = new AuditLog(join(this.store.dataDir, "audit.jsonl"));
     this.checkpoints = new CheckpointManager(this.store.dataDir);
     this.configPromise = loadConfig({ cwd: this.cwd, env: this.env }).then(
@@ -101,9 +101,9 @@ export class Kiln {
 
   async createSession(input: CreateSessionInput = {}): Promise<Session> {
     const config = await this.configPromise;
-    const model = input.model ?? this.options.model ?? this.env.KILN_MODEL ?? config.model;
+    const model = input.model ?? this.options.model ?? this.env.KILNCRAFT_MODEL ?? config.model;
     if (!model) {
-      throw new KilnError(
+      throw new KilncraftError(
         "invalid_argument",
         "No model configured. Pass model or set it in config.",
         { hint: "Example: anthropic/claude-sonnet-4-5" },
@@ -128,13 +128,13 @@ export class Kiln {
   ): Promise<TurnResult> {
     const session = this.store.get(sessionID);
     if (!session) {
-      throw new KilnError("session_not_found", `Session ${sessionID} was not found`, {
+      throw new KilncraftError("session_not_found", `Session ${sessionID} was not found`, {
         details: { sessionID },
       });
     }
 
     if (this.running.has(sessionID)) {
-      throw new KilnError("invalid_argument", `Session ${sessionID} is already running`);
+      throw new KilncraftError("invalid_argument", `Session ${sessionID} is already running`);
     }
     this.running.add(sessionID);
 
@@ -167,7 +167,8 @@ export class Kiln {
 
   async compact(sessionID: string): Promise<ReturnType<typeof Agent.prototype.compact>> {
     const session = this.store.get(sessionID);
-    if (!session) throw new KilnError("session_not_found", `Session ${sessionID} was not found`);
+    if (!session)
+      throw new KilncraftError("session_not_found", `Session ${sessionID} was not found`);
     const agent = await this.getAgent(session);
     return agent.compact();
   }
@@ -210,22 +211,26 @@ export class Kiln {
     const config = await this.configPromise;
     const modelRef = modelOverride ?? session.model;
     if (!modelRef) {
-      throw new KilnError("invalid_argument", "Session has no model");
+      throw new KilncraftError("invalid_argument", "Session has no model");
     }
 
     const parsed = parseModelRef(modelRef);
     if (!parsed) {
-      throw new KilnError("invalid_argument", `Invalid model reference "${modelRef}"`);
+      throw new KilncraftError("invalid_argument", `Invalid model reference "${modelRef}"`);
     }
 
     const provider = this.registry.get(parsed.provider);
     if (!provider) {
-      throw new KilnError("provider_error", `Provider "${parsed.provider}" is not configured`, {
-        hint: `Available: ${this.registry
-          .list()
-          .map((entry) => entry.id)
-          .join(", ")}`,
-      });
+      throw new KilncraftError(
+        "provider_error",
+        `Provider "${parsed.provider}" is not configured`,
+        {
+          hint: `Available: ${this.registry
+            .list()
+            .map((entry) => entry.id)
+            .join(", ")}`,
+        },
+      );
     }
 
     const mode = permissionMode ?? session.permissions ?? config.permissions.default;
@@ -281,8 +286,8 @@ export class Kiln {
   }
 }
 
-export function createKiln(options: KilnOptions = {}): Kiln {
-  return new Kiln(options);
+export function createKilncraft(options: KilncraftOptions = {}): Kilncraft {
+  return new Kilncraft(options);
 }
 
 export type { AgentEvent, TurnResult };

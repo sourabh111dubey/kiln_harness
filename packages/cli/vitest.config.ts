@@ -4,8 +4,8 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   resolve: {
     alias: {
-      "@kiln/core": fileURLToPath(new URL("../core/src/index.ts", import.meta.url)),
-      "@kiln/shared": fileURLToPath(new URL("../shared/src/index.ts", import.meta.url)),
+      "@kilncraft/core": fileURLToPath(new URL("../core/src/index.ts", import.meta.url)),
+      "@kilncraft/shared": fileURLToPath(new URL("../shared/src/index.ts", import.meta.url)),
     },
   },
   test: {

@@ -1,5 +1,5 @@
 import type { Logger } from "pino";
-import type { KilnEvent } from "./events";
+import type { KilncraftEvent } from "./events";
 import type { ChatMessage, ToolCall } from "./provider";
 import type { ToolOutput } from "./schemas";
 import type { ToolDefinition } from "./tool";
@@ -46,7 +46,7 @@ export interface PluginHooks {
     context: PluginContext,
     payload: ToolAfterPayload,
   ) => ToolOutput | undefined | Promise<ToolOutput | undefined>;
-  event?: (context: PluginContext, event: KilnEvent) => void | Promise<void>;
+  event?: (context: PluginContext, event: KilncraftEvent) => void | Promise<void>;
 }
 
 export interface PluginCommand {

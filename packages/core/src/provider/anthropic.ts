@@ -6,7 +6,7 @@ import {
   type ProviderCapabilities,
   type StreamEvent,
   type StreamRequest,
-} from "@kiln/shared";
+} from "@kilncraft/shared";
 import { fetchJson, numberOr, openSse, sseData } from "./http";
 import { modelInfoFor } from "./models";
 

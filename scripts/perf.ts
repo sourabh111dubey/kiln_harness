@@ -59,7 +59,7 @@ async function measureBashSpawn(): Promise<number> {
 }
 
 async function measureSessionStore(): Promise<{ replay: number; search: number }> {
-  const directory = await mkdtemp(join(tmpdir(), "kiln-perf-"));
+  const directory = await mkdtemp(join(tmpdir(), "kilncraft-perf-"));
   const store = new SessionStore({ dataDir: directory });
   const session = store.create({ cwd: process.cwd(), model: "fake/test" });
 

@@ -3,11 +3,11 @@ import { readFile } from "node:fs/promises";
 import { extname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import {
-  KilnError,
+  KilncraftError,
   type LspDiagnosticLike,
   type LspManagerLike,
   type LspSymbolLike,
-} from "@kiln/shared";
+} from "@kilncraft/shared";
 import {
   createMessageConnection,
   type MessageConnection,
@@ -38,7 +38,7 @@ async function withTimeout<T>(promise: Promise<T>, ms: number, label: string): P
       promise,
       new Promise<T>((_resolve, reject) => {
         timer = setTimeout(
-          () => reject(new KilnError("io_error", `${label} timed out after ${ms}ms`)),
+          () => reject(new KilncraftError("io_error", `${label} timed out after ${ms}ms`)),
           ms,
         );
       }),
@@ -80,12 +80,12 @@ export class LspClient {
 
     if (!child.stdout || !child.stdin) {
       child.kill();
-      throw new KilnError("io_error", `LSP server ${this.config.command} has no stdio`);
+      throw new KilncraftError("io_error", `LSP server ${this.config.command} has no stdio`);
     }
 
     await new Promise<void>((resolve, reject) => {
       const timer = setTimeout(() => {
-        reject(new KilnError("io_error", `LSP server ${this.config.command} failed to spawn`));
+        reject(new KilncraftError("io_error", `LSP server ${this.config.command} failed to spawn`));
       }, 5_000);
       child.once("spawn", () => {
         clearTimeout(timer);
@@ -234,7 +234,7 @@ export class LspManager implements LspManagerLike {
   private async clientFor(path: string): Promise<LspClient> {
     const match = findServerForPath(this.servers, path);
     if (!match) {
-      throw new KilnError("tool_error", `No LSP server configured for ${path}`, {
+      throw new KilncraftError("tool_error", `No LSP server configured for ${path}`, {
         hint: "Add an lsp.servers entry for this file extension.",
       });
     }

@@ -1,4 +1,4 @@
-import type { PermissionMode, PermissionRule } from "@kiln/shared";
+import type { PermissionMode, PermissionRule } from "@kilncraft/shared";
 import { describe, expect, it } from "vitest";
 import { isDangerousCommand, PermissionEngine } from "../src/permissions/engine";
 

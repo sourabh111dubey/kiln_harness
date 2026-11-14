@@ -11,17 +11,17 @@ import {
   resolveDataDir,
   SessionStore,
   type ToolRegistry,
-} from "@kiln/core";
-import { LspManager, type LspServerConfig } from "@kiln/lsp";
-import { createSandbox } from "@kiln/sandbox";
+} from "@kilncraft/core";
+import { LspManager, type LspServerConfig } from "@kilncraft/lsp";
+import { createSandbox } from "@kilncraft/sandbox";
 import {
   createLogger,
-  KilnError,
+  KilncraftError,
   loadConfig,
   type PermissionMode,
   parseModelRef,
   type Session,
-} from "@kiln/shared";
+} from "@kilncraft/shared";
 
 type Logger = ReturnType<typeof createLogger>;
 
@@ -73,7 +73,7 @@ export async function runPrompt(options: RunPromptOptions): Promise<RunPromptRes
   if (options.sessionID) {
     session = store.get(options.sessionID);
     if (!session) {
-      throw new KilnError("session_not_found", `Session ${options.sessionID} was not found`, {
+      throw new KilncraftError("session_not_found", `Session ${options.sessionID} was not found`, {
         details: { sessionID: options.sessionID },
       });
     }
@@ -81,18 +81,18 @@ export async function runPrompt(options: RunPromptOptions): Promise<RunPromptRes
     session = store.list({ cwd })[0];
   }
 
-  const modelRef = options.model ?? session?.model ?? loaded.config.model ?? env.KILN_MODEL;
+  const modelRef = options.model ?? session?.model ?? loaded.config.model ?? env.KILNCRAFT_MODEL;
   if (!modelRef) {
-    throw new KilnError(
+    throw new KilncraftError(
       "invalid_argument",
-      "No model configured. Set `model` in config, pass --model, or set KILN_MODEL.",
+      "No model configured. Set `model` in config, pass --model, or set KILNCRAFT_MODEL.",
       { hint: "Example: --model anthropic/claude-sonnet-4-5" },
     );
   }
 
   const parsed = parseModelRef(modelRef);
   if (!parsed) {
-    throw new KilnError(
+    throw new KilncraftError(
       "invalid_argument",
       `Invalid model reference "${modelRef}". Expected provider/model.`,
       { hint: "Example: anthropic/claude-sonnet-4-5" },
@@ -102,7 +102,7 @@ export async function runPrompt(options: RunPromptOptions): Promise<RunPromptRes
   const registry = options.registry ?? createDefaultProviderRegistry(env);
   const provider = registry.get(parsed.provider);
   if (!provider) {
-    throw new KilnError("provider_error", `Provider "${parsed.provider}" is not configured.`, {
+    throw new KilncraftError("provider_error", `Provider "${parsed.provider}" is not configured.`, {
       hint: `Available providers: ${registry
         .list()
         .map((entry) => entry.id)
@@ -122,7 +122,7 @@ export async function runPrompt(options: RunPromptOptions): Promise<RunPromptRes
   const logger =
     options.logger ??
     createLogger({
-      level: options.verbose ? "debug" : (env.KILN_LOG_LEVEL ?? "info"),
+      level: options.verbose ? "debug" : (env.KILNCRAFT_LOG_LEVEL ?? "info"),
     });
 
   const agent = new Agent({

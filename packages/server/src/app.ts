@@ -15,20 +15,20 @@ import {
   type PluginHost,
   type ProviderRegistry,
   SessionStore,
-} from "@kiln/core";
-import { LspManager, type LspServerConfig } from "@kiln/lsp";
-import { createMcpHttpHandler, type McpConnection, registerMcpTools } from "@kiln/mcp";
-import { createSandbox } from "@kiln/sandbox";
+} from "@kilncraft/core";
+import { LspManager, type LspServerConfig } from "@kilncraft/lsp";
+import { createMcpHttpHandler, type McpConnection, registerMcpTools } from "@kilncraft/mcp";
+import { createSandbox } from "@kilncraft/sandbox";
 import {
   createLogger,
-  type KilnConfig,
-  KilnError,
+  type KilncraftConfig,
+  KilncraftError,
   loadConfig,
   type PermissionDecision,
   type PermissionMode,
   parseModelRef,
   type Session,
-} from "@kiln/shared";
+} from "@kilncraft/shared";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { streamSSE } from "hono/streaming";
@@ -81,7 +81,7 @@ const WEB_INDEX = `<!doctype html>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Kiln</title>
+  <title>Kilncraft</title>
   <style>
     body { background: #0b0e14; color: #d7dde8; font: 14px/1.5 ui-monospace, monospace; margin: 0; padding: 24px; }
     h1 { color: #67e8f9; font-size: 20px; }
@@ -93,7 +93,7 @@ const WEB_INDEX = `<!doctype html>
   </style>
 </head>
 <body>
-  <h1>kiln</h1>
+  <h1>kilncraft</h1>
   <p>Local coding agent API. <a href="/openapi.json">OpenAPI</a> · <a href="/docs">Docs</a></p>
   <div class="row"><input id="prompt" placeholder="Ask the agent..." /><button id="send">Run</button></div>
   <pre id="out">Loading sessions...</pre>
@@ -130,7 +130,7 @@ const WEB_INDEX = `<!doctype html>
 
 const OPENAPI = {
   openapi: "3.1.0",
-  info: { title: "Kiln API", version: "0.0.0" },
+  info: { title: "Kilncraft API", version: "0.0.0" },
   paths: {
     "/health": { get: { summary: "Health check", responses: { "200": { description: "OK" } } } },
     "/info": {
@@ -192,15 +192,15 @@ const OPENAPI = {
   },
 };
 
-export async function createKilnApp(options: ServerOptions = {}): Promise<{
+export async function createKilncraftApp(options: ServerOptions = {}): Promise<{
   app: Hono;
   context: ServerContext;
-  config: KilnConfig;
+  config: KilncraftConfig;
   close: () => void;
 }> {
   const env = options.env ?? process.env;
   const cwd = resolve(options.cwd ?? process.cwd());
-  const logger = options.logger ?? createLogger({ level: env.KILN_LOG_LEVEL ?? "info" });
+  const logger = options.logger ?? createLogger({ level: env.KILNCRAFT_LOG_LEVEL ?? "info" });
   const loaded = await loadConfig({ cwd, env });
   const store = new SessionStore({ dataDir: options.dataDir });
   const registry = options.registry ?? createDefaultProviderRegistry(env);
@@ -233,7 +233,7 @@ export async function createKilnApp(options: ServerOptions = {}): Promise<{
     pending: new Map(),
   };
 
-  const defaultModel = env.KILN_MODEL ?? loaded.config.model;
+  const defaultModel = env.KILNCRAFT_MODEL ?? loaded.config.model;
   const defaultPermission = loaded.config.permissions.default;
 
   const denyPending = (sessionID: string): void => {
@@ -271,24 +271,28 @@ export async function createKilnApp(options: ServerOptions = {}): Promise<{
   ): Agent => {
     const modelRef = modelOverride ?? session.model ?? defaultModel;
     if (!modelRef) {
-      throw new KilnError("invalid_argument", "No model configured for this session", {
+      throw new KilncraftError("invalid_argument", "No model configured for this session", {
         hint: "Pass model in the prompt body or set model in config.",
       });
     }
 
     const parsed = parseModelRef(modelRef);
     if (!parsed) {
-      throw new KilnError("invalid_argument", `Invalid model reference "${modelRef}"`);
+      throw new KilncraftError("invalid_argument", `Invalid model reference "${modelRef}"`);
     }
 
     const provider = registry.get(parsed.provider);
     if (!provider) {
-      throw new KilnError("provider_error", `Provider "${parsed.provider}" is not configured`, {
-        hint: `Available: ${registry
-          .list()
-          .map((entry) => entry.id)
-          .join(", ")}`,
-      });
+      throw new KilncraftError(
+        "provider_error",
+        `Provider "${parsed.provider}" is not configured`,
+        {
+          hint: `Available: ${registry
+            .list()
+            .map((entry) => entry.id)
+            .join(", ")}`,
+        },
+      );
     }
 
     const mode = permissionMode ?? session.permissions ?? defaultPermission;
@@ -341,13 +345,13 @@ export async function createKilnApp(options: ServerOptions = {}): Promise<{
   app.use(
     "*",
     cors({
-      origin: env.KILN_CORS_ORIGIN ?? "*",
+      origin: env.KILNCRAFT_CORS_ORIGIN ?? "*",
       allowMethods: ["GET", "POST", "DELETE", "OPTIONS"],
       allowHeaders: ["content-type", "authorization"],
     }),
   );
 
-  const token = env.KILN_TOKEN;
+  const token = env.KILNCRAFT_TOKEN;
   if (token) {
     app.use("*", async (c, next) => {
       if (c.req.path === "/health") return next();
@@ -361,7 +365,7 @@ export async function createKilnApp(options: ServerOptions = {}): Promise<{
   app.get("/health", (c) => c.json({ ok: true, uptime: process.uptime() }));
   app.get("/info", (c) =>
     c.json({
-      name: "kiln",
+      name: "kilncraft",
       version: "0.0.0",
       node: process.version,
       platform: process.platform,
@@ -376,7 +380,7 @@ export async function createKilnApp(options: ServerOptions = {}): Promise<{
   app.get("/openapi.json", (c) => c.json(OPENAPI));
   app.get("/docs", (c) =>
     c.html(
-      `<!doctype html><meta charset="utf-8"><title>Kiln API</title><body style="font-family:monospace;background:#0b0e14;color:#d7dde8"><h1>Kiln API</h1><p><a href="/openapi.json" style="color:#67e8f9">/openapi.json</a></p><pre>${JSON.stringify(OPENAPI, null, 2).replace(/</g, "&lt;")}</pre></body>`,
+      `<!doctype html><meta charset="utf-8"><title>Kilncraft API</title><body style="font-family:monospace;background:#0b0e14;color:#d7dde8"><h1>Kilncraft API</h1><p><a href="/openapi.json" style="color:#67e8f9">/openapi.json</a></p><pre>${JSON.stringify(OPENAPI, null, 2).replace(/</g, "&lt;")}</pre></body>`,
     ),
   );
 
@@ -579,12 +583,12 @@ export async function startServer(
   url: string;
   close: () => Promise<void>;
 }> {
-  const { app, close } = await createKilnApp(options);
+  const { app, close } = await createKilncraftApp(options);
   const port = options.port ?? 4_096;
   const hostname = options.hostname ?? "127.0.0.1";
   const server = serve({ fetch: app.fetch, port, hostname });
   const env = options.env ?? process.env;
-  const closeWebSocket = attachWebSocket(server, app, env.KILN_TOKEN);
+  const closeWebSocket = attachWebSocket(server, app, env.KILNCRAFT_TOKEN);
   await new Promise<void>((resolve) => {
     setImmediate(resolve);
   });

@@ -10,5 +10,5 @@ export default defineConfig({
   clean: true,
   splitting: false,
   treeshake: true,
-  external: ["@kiln/core", "@kiln/shared", "ink", "react"],
+  external: ["@kilncraft/core", "@kilncraft/shared", "ink", "react"],
 });

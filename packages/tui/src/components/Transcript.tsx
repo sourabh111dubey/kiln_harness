@@ -1,5 +1,5 @@
-import { summarizeInput } from "@kiln/core";
-import type { PermissionDecision, ToolCall, ToolOutput } from "@kiln/shared";
+import { summarizeInput } from "@kilncraft/core";
+import type { PermissionDecision, ToolCall, ToolOutput } from "@kilncraft/shared";
 import { Box, Text } from "ink";
 import { DiffView } from "../diff";
 import { Markdown } from "../markdown";

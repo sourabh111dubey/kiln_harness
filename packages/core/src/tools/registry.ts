@@ -1,10 +1,10 @@
 import {
-  KilnError,
+  KilncraftError,
   type ToolContext,
   type ToolDefinition,
   type ToolOutput,
   type ToolSpec,
-} from "@kiln/shared";
+} from "@kilncraft/shared";
 import { z } from "zod";
 import { bashTool } from "./bash";
 import { editTool } from "./edit";
@@ -43,7 +43,7 @@ export class ToolRegistry {
   async execute(id: string, input: unknown, context: ToolContext): Promise<ToolOutput> {
     const tool = this.tools.get(id);
     if (!tool) {
-      throw new KilnError("tool_not_found", `Unknown tool: ${id}`, {
+      throw new KilncraftError("tool_not_found", `Unknown tool: ${id}`, {
         details: { tool: id },
       });
     }
@@ -54,7 +54,7 @@ export class ToolRegistry {
       !Array.isArray(input) &&
       typeof (input as Record<string, unknown>).__invalid_json === "string"
     ) {
-      throw new KilnError(
+      throw new KilncraftError(
         "tool_error",
         `Invalid JSON input for ${id}: ${String((input as Record<string, unknown>).__invalid_json).slice(0, 300)}`,
         { details: { tool: id } },
@@ -66,7 +66,7 @@ export class ToolRegistry {
       const issues = parsed.error.issues
         .map((issue) => `${issue.path.join(".") || "<root>"}: ${issue.message}`)
         .join("; ");
-      throw new KilnError("tool_error", `Invalid input for ${id}: ${issues}`, {
+      throw new KilncraftError("tool_error", `Invalid input for ${id}: ${issues}`, {
         details: { tool: id, issues: parsed.error.issues },
       });
     }

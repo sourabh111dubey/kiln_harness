@@ -1,4 +1,4 @@
-import { type PermissionMode, toKilnError } from "@kiln/shared";
+import { type PermissionMode, toKilncraftError } from "@kilncraft/shared";
 import type { Command } from "commander";
 import { runPrompt } from "../run-prompt";
 
@@ -58,10 +58,10 @@ export function registerRunCommand(program: Command): void {
         process.stdout.write(`${result.text}\n`);
       }
     } catch (error) {
-      const kilnError = toKilnError(error);
-      process.stderr.write(`kiln: ${kilnError.message}\n`);
-      if (kilnError.hint) {
-        process.stderr.write(`hint: ${kilnError.hint}\n`);
+      const kilncraftError = toKilncraftError(error);
+      process.stderr.write(`kilncraft: ${kilncraftError.message}\n`);
+      if (kilncraftError.hint) {
+        process.stderr.write(`hint: ${kilncraftError.hint}\n`);
       }
       process.exitCode = 1;
     }

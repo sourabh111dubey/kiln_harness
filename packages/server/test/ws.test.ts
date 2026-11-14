@@ -8,7 +8,7 @@ import { startServer } from "../src/app";
 const directories: string[] = [];
 
 async function tempDir(): Promise<string> {
-  const directory = await mkdtemp(join(tmpdir(), "kiln-ws-"));
+  const directory = await mkdtemp(join(tmpdir(), "kilncraft-ws-"));
   directories.push(directory);
   return directory;
 }
@@ -30,7 +30,7 @@ describe("websocket bridge", () => {
       port: 4_123,
       hostname: "127.0.0.1",
       dataDir,
-      env: { KILN_CONFIG_DIR: dataDir, KILN_DATA_DIR: dataDir },
+      env: { KILNCRAFT_CONFIG_DIR: dataDir, KILNCRAFT_DATA_DIR: dataDir },
     });
 
     try {

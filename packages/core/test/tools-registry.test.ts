@@ -1,4 +1,4 @@
-import type { ToolDefinition } from "@kiln/shared";
+import type { ToolDefinition } from "@kilncraft/shared";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { createDefaultToolRegistry, ToolRegistry } from "../src/tools/registry";
@@ -18,7 +18,7 @@ const doubleTool: ToolDefinition<{ value: number }> = {
 
 describe("tool registry", () => {
   it("registers, lists, and executes tools", async () => {
-    const cwd = await makeTempDir("kiln-registry-");
+    const cwd = await makeTempDir("kilncraft-registry-");
     try {
       const registry = new ToolRegistry();
       registry.register(doubleTool);
@@ -35,7 +35,7 @@ describe("tool registry", () => {
   });
 
   it("rejects unknown tools and invalid input", async () => {
-    const cwd = await makeTempDir("kiln-registry-");
+    const cwd = await makeTempDir("kilncraft-registry-");
     try {
       const registry = new ToolRegistry();
       registry.register(doubleTool);

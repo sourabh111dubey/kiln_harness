@@ -1,5 +1,5 @@
 import { type ChildProcess, spawn } from "node:child_process";
-import type { ToolDefinition } from "@kiln/shared";
+import type { ToolDefinition } from "@kilncraft/shared";
 import { z } from "zod";
 import { assertInsideWorkspace, assertRealInside, resolveWorkspacePath } from "./common";
 
@@ -29,7 +29,7 @@ const ALLOWED_ENV = new Set([
 ]);
 
 function sanitizedEnvironment(): NodeJS.ProcessEnv {
-  const extra = (process.env.KILN_PASS_ENV ?? "")
+  const extra = (process.env.KILNCRAFT_PASS_ENV ?? "")
     .split(",")
     .map((entry) => entry.trim())
     .filter((entry) => entry.length > 0);

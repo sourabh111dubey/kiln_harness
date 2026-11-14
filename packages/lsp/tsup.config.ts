@@ -10,5 +10,5 @@ export default defineConfig({
   clean: true,
   splitting: false,
   treeshake: true,
-  external: ["@kiln/shared", "vscode-jsonrpc"],
+  external: ["@kilncraft/shared", "vscode-jsonrpc"],
 });

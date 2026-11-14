@@ -1,5 +1,5 @@
-import type { ToolDefinition, ToolOutput } from "@kiln/shared";
-import { KilnError } from "@kiln/shared";
+import type { ToolDefinition, ToolOutput } from "@kilncraft/shared";
+import { KilncraftError } from "@kilncraft/shared";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
@@ -103,7 +103,7 @@ export async function connectMcpServer(
   config: McpServerConfig,
   options: { logger?: { warn: (payload: unknown, message?: string) => void } } = {},
 ): Promise<McpConnection> {
-  const client = new Client({ name: "kiln", version: "0.0.0" });
+  const client = new Client({ name: "kilncraft", version: "0.0.0" });
   const env: Record<string, string> = {};
   for (const key of [
     "PATH",
@@ -151,7 +151,7 @@ export async function connectMcpServer(
   } catch (error) {
     await client.close().catch(() => undefined);
     options.logger?.warn({ err: error }, `failed to connect MCP server ${name}`);
-    throw new KilnError("provider_error", `MCP server ${name} failed: ${String(error)}`, {
+    throw new KilncraftError("provider_error", `MCP server ${name} failed: ${String(error)}`, {
       cause: error,
       recoverable: true,
     });

@@ -1,10 +1,10 @@
 {
-  "name": "@kiln/cli",
+  "name": "@kilncraft/cli",
   "version": "1.0.0",
   "private": false,
   "type": "module",
   "bin": {
-    "kiln": "./dist/index.js"
+    "kilncraft": "./dist/index.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -25,14 +25,14 @@
     "clean": "rm -rf dist .turbo coverage"
   },
   "dependencies": {
-    "@kiln/core": "workspace:*",
-    "@kiln/mcp": "workspace:*",
-    "@kiln/shared": "workspace:*",
-    "@kiln/server": "workspace:*",
-    "@kiln/tui": "workspace:*",
+    "@kilncraft/core": "workspace:*",
+    "@kilncraft/mcp": "workspace:*",
+    "@kilncraft/shared": "workspace:*",
+    "@kilncraft/server": "workspace:*",
+    "@kilncraft/tui": "workspace:*",
     "commander": "15.1.0",
-    "@kiln/sandbox": "workspace:*",
-    "@kiln/lsp": "workspace:*"
+    "@kilncraft/sandbox": "workspace:*",
+    "@kilncraft/lsp": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "26.6.6",

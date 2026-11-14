@@ -6,13 +6,13 @@ import {
   modelInfoFor,
   resolveDataDir,
   SessionStore,
-} from "@kiln/core";
-import { parseModelRef } from "@kiln/shared";
+} from "@kilncraft/core";
+import { parseModelRef } from "@kilncraft/shared";
 import type { Command } from "commander";
 
 function fail(error: unknown): void {
   const message = error instanceof Error ? error.message : String(error);
-  process.stderr.write(`kiln: ${message}\n`);
+  process.stderr.write(`kilncraft: ${message}\n`);
   process.exitCode = 1;
 }
 

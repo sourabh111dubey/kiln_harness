@@ -196,25 +196,25 @@ importers:
 
   packages/cli:
     dependencies:
-      '@kiln/core':
+      '@kilncraft/core':
         specifier: workspace:*
         version: link:../core
-      '@kiln/lsp':
+      '@kilncraft/lsp':
         specifier: workspace:*
         version: link:../lsp
-      '@kiln/mcp':
+      '@kilncraft/mcp':
         specifier: workspace:*
         version: link:../mcp
-      '@kiln/sandbox':
+      '@kilncraft/sandbox':
         specifier: workspace:*
         version: link:../sandbox
-      '@kiln/server':
+      '@kilncraft/server':
         specifier: workspace:*
         version: link:../server
-      '@kiln/shared':
+      '@kilncraft/shared':
         specifier: workspace:*
         version: link:../shared
-      '@kiln/tui':
+      '@kilncraft/tui':
         specifier: workspace:*
         version: link:../tui
       commander:
@@ -242,7 +242,7 @@ importers:
 
   packages/core:
     dependencies:
-      '@kiln/shared':
+      '@kilncraft/shared':
         specifier: workspace:*
         version: link:../shared
       diff:
@@ -279,10 +279,10 @@ importers:
 
   packages/eval:
     dependencies:
-      '@kiln/core':
+      '@kilncraft/core':
         specifier: workspace:*
         version: link:../core
-      '@kiln/shared':
+      '@kilncraft/shared':
         specifier: workspace:*
         version: link:../shared
     devDependencies:
@@ -304,7 +304,7 @@ importers:
 
   packages/lsp:
     dependencies:
-      '@kiln/shared':
+      '@kilncraft/shared':
         specifier: workspace:*
         version: link:../shared
       vscode-jsonrpc:
@@ -329,10 +329,10 @@ importers:
 
   packages/mcp:
     dependencies:
-      '@kiln/core':
+      '@kilncraft/core':
         specifier: workspace:*
         version: link:../core
-      '@kiln/shared':
+      '@kilncraft/shared':
         specifier: workspace:*
         version: link:../shared
       '@modelcontextprotocol/sdk':
@@ -360,7 +360,7 @@ importers:
 
   packages/plugin-sdk:
     dependencies:
-      '@kiln/shared':
+      '@kilncraft/shared':
         specifier: workspace:*
         version: link:../shared
     devDependencies:
@@ -382,7 +382,7 @@ importers:
 
   packages/sandbox:
     dependencies:
-      '@kiln/shared':
+      '@kilncraft/shared':
         specifier: workspace:*
         version: link:../shared
     devDependencies:
@@ -404,16 +404,16 @@ importers:
 
   packages/sdk:
     dependencies:
-      '@kiln/core':
+      '@kilncraft/core':
         specifier: workspace:*
         version: link:../core
-      '@kiln/lsp':
+      '@kilncraft/lsp':
         specifier: workspace:*
         version: link:../lsp
-      '@kiln/sandbox':
+      '@kilncraft/sandbox':
         specifier: workspace:*
         version: link:../sandbox
-      '@kiln/shared':
+      '@kilncraft/shared':
         specifier: workspace:*
         version: link:../shared
     devDependencies:
@@ -438,19 +438,19 @@ importers:
       '@hono/node-server':
         specifier: 2.1.8
         version: 2.1.8(hono@4.13.18)
-      '@kiln/core':
+      '@kilncraft/core':
         specifier: workspace:*
         version: link:../core
-      '@kiln/lsp':
+      '@kilncraft/lsp':
         specifier: workspace:*
         version: link:../lsp
-      '@kiln/mcp':
+      '@kilncraft/mcp':
         specifier: workspace:*
         version: link:../mcp
-      '@kiln/sandbox':
+      '@kilncraft/sandbox':
         specifier: workspace:*
         version: link:../sandbox
-      '@kiln/shared':
+      '@kilncraft/shared':
         specifier: workspace:*
         version: link:../shared
       hono:
@@ -522,16 +522,16 @@ importers:
 
   packages/tui:
     dependencies:
-      '@kiln/core':
+      '@kilncraft/core':
         specifier: workspace:*
         version: link:../core
-      '@kiln/lsp':
+      '@kilncraft/lsp':
         specifier: workspace:*
         version: link:../lsp
-      '@kiln/sandbox':
+      '@kilncraft/sandbox':
         specifier: workspace:*
         version: link:../sandbox
-      '@kiln/shared':
+      '@kilncraft/shared':
         specifier: workspace:*
         version: link:../shared
       ink:

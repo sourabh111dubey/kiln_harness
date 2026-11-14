@@ -1,10 +1,10 @@
-import { startServer } from "@kiln/server";
+import { startServer } from "@kilncraft/server";
 import type { Command } from "commander";
 
 export function registerServeCommand(program: Command): void {
   program
     .command("serve")
-    .description("Start the kiln HTTP/WebSocket daemon")
+    .description("Start the kilncraft HTTP/WebSocket daemon")
     .option("--port <n>", "Port to listen on", "4096")
     .option("--host <host>", "Host to bind", "127.0.0.1")
     .action(async (options: { port?: string; host?: string }) => {
@@ -20,7 +20,7 @@ export function registerServeCommand(program: Command): void {
         hostname: options.host ?? "127.0.0.1",
       });
 
-      process.stdout.write(`kiln serving at ${running.url}\n`);
+      process.stdout.write(`kilncraft serving at ${running.url}\n`);
 
       const shutdown = async () => {
         await running.close();

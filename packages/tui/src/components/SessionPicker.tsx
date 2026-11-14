@@ -1,4 +1,4 @@
-import type { Session } from "@kiln/shared";
+import type { Session } from "@kilncraft/shared";
 import { Box, Text, useInput } from "ink";
 import { useState } from "react";
 import { color, type Theme } from "../theme";

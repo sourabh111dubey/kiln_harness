@@ -1,4 +1,4 @@
-import { summarizeInput } from "@kiln/core";
+import { summarizeInput } from "@kilncraft/core";
 import { Box, Text, useInput } from "ink";
 import { color, type Theme } from "../theme";
 

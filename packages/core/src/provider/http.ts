@@ -1,4 +1,4 @@
-import { KilnError } from "@kiln/shared";
+import { KilncraftError } from "@kilncraft/shared";
 
 function mergeHeaders(input: RequestInit["headers"]): Headers {
   const headers = new Headers(input);
@@ -26,7 +26,7 @@ export async function openSse(
   const response = await fetch(url, { ...init, headers, signal });
   if (!response.ok) {
     const body = await errorMessage(response);
-    throw new KilnError("provider_error", `HTTP ${response.status} from ${url}: ${body}`, {
+    throw new KilncraftError("provider_error", `HTTP ${response.status} from ${url}: ${body}`, {
       details: { status: response.status, url },
       recoverable: response.status === 429 || response.status >= 500,
       hint: response.status === 401 ? "Check the provider API key." : undefined,
@@ -44,7 +44,7 @@ export async function fetchJson(
   const response = await fetch(url, { ...init, headers, signal });
   if (!response.ok) {
     const body = await errorMessage(response);
-    throw new KilnError("provider_error", `HTTP ${response.status} from ${url}: ${body}`, {
+    throw new KilncraftError("provider_error", `HTTP ${response.status} from ${url}: ${body}`, {
       details: { status: response.status, url },
       recoverable: response.status === 429 || response.status >= 500,
     });
@@ -62,7 +62,7 @@ function* dataLines(line: string): Generator<string> {
 export async function* sseData(response: Response): AsyncGenerator<string> {
   const body = response.body;
   if (!body) {
-    throw new KilnError("provider_error", "Streaming response has no body");
+    throw new KilncraftError("provider_error", "Streaming response has no body");
   }
 
   const reader = body.getReader();
