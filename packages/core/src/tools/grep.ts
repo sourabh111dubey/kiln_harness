@@ -1,0 +1,106 @@
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import type { ToolDefinition } from "@harness/shared";
+import { z } from "zod";
+import {
+  assertInsideWorkspace,
+  isBinary,
+  matchesGlob,
+  resolveWorkspacePath,
+  truncateText,
+  walkFiles,
+} from "./common";
+
+const grepInput = z.object({
+  pattern: z.string().min(1).describe("Regular expression to search for"),
+  path: z
+    .string()
+    .optional()
+    .describe("File or directory to search (defaults to the workspace root)"),
+  glob: z.string().optional().describe("Only search files matching this glob"),
+  caseSensitive: z.boolean().optional().describe("Case-sensitive matching (default false)"),
+  context: z
+    .number()
+    .int()
+    .min(0)
+    .max(10)
+    .optional()
+    .describe("Lines of context around each match"),
+  maxResults: z.number().int().positive().max(1_000).optional().describe("Maximum matches"),
+});
+
+export type GrepInput = z.infer<typeof grepInput>;
+
+export const grepTool: ToolDefinition<GrepInput> = {
+  id: "grep",
+  description:
+    "Search file contents with a regular expression. Returns file:line matches and optional context.",
+  input: grepInput,
+  readOnly: true,
+  parallelizable: true,
+  defaultDecision: "allow",
+  async execute(input, context) {
+    const root = resolveWorkspacePath(context.cwd, input.path ?? ".");
+    assertInsideWorkspace(context.cwd, root);
+
+    let expression: RegExp;
+    try {
+      expression = new RegExp(input.pattern, input.caseSensitive ? "" : "i");
+    } catch (error) {
+      return {
+        kind: "text",
+        text: `Invalid regular expression: ${error instanceof Error ? error.message : String(error)}`,
+      };
+    }
+
+    const maxResults = input.maxResults ?? 100;
+    const contextLines = input.context ?? 0;
+    const matches: string[] = [];
+    let total = 0;
+
+    for await (const relativePath of walkFiles(root)) {
+      if (input.glob && !matchesGlob(relativePath, input.glob)) continue;
+
+      let content: string;
+      try {
+        const buffer = await readFile(join(root, relativePath));
+        if (isBinary(buffer)) continue;
+        content = buffer.toString("utf8");
+      } catch {
+        continue;
+      }
+
+      const lines = content.split("\n");
+      for (let index = 0; index < lines.length; index++) {
+        const line = lines[index];
+        if (line === undefined || !expression.test(line)) continue;
+
+        total++;
+        if (matches.length >= maxResults) continue;
+
+        const start = Math.max(0, index - contextLines);
+        const end = Math.min(lines.length - 1, index + contextLines);
+        for (let cursor = start; cursor <= end; cursor++) {
+          const current = lines[cursor];
+          if (current === undefined) continue;
+          const marker = cursor === index ? ":" : "-";
+          matches.push(`${relativePath}${marker}${cursor + 1}${marker}${current}`);
+        }
+        if (contextLines > 0) matches.push("--");
+      }
+    }
+
+    if (total === 0) {
+      return {
+        kind: "text",
+        text: `No matches found for /${input.pattern}/ in ${input.path ?? context.cwd}`,
+      };
+    }
+
+    const body = matches.join("\n");
+    const result = truncateText(body, 30_000);
+    const notice =
+      total > matches.length ? `\n\n[showing ${matches.length} of ${total} matches]` : "";
+    return { kind: "text", text: `${result.text}${notice}` };
+  },
+};

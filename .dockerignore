@@ -1,0 +1,12 @@
+node_modules
+dist
+coverage
+.turbo
+.git
+.github
+.harness
+*.log
+.env
+.env.*
+plan.md
+README.md

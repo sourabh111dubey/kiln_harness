@@ -1,0 +1,246 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://harness.dev/config.schema.json",
+  "title": "Harness configuration",
+  "description": "Configuration schema for the harness coding agent.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "model": {
+      "type": "string"
+    },
+    "smallModel": {
+      "type": "string"
+    },
+    "agent": {
+      "default": "build",
+      "type": "string"
+    },
+    "permissions": {
+      "default": {
+        "default": "default",
+        "rules": []
+      },
+      "type": "object",
+      "properties": {
+        "default": {
+          "default": "default",
+          "type": "string",
+          "enum": [
+            "default",
+            "acceptEdits",
+            "plan",
+            "bypassPermissions",
+            "custom"
+          ]
+        },
+        "rules": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "tool": {
+                "type": "string",
+                "minLength": 1
+              },
+              "pattern": {
+                "type": "string"
+              },
+              "decision": {
+                "type": "string",
+                "enum": [
+                  "allow",
+                  "ask",
+                  "deny"
+                ]
+              },
+              "scope": {
+                "default": "session",
+                "type": "string",
+                "enum": [
+                  "session",
+                  "project",
+                  "user"
+                ]
+              }
+            },
+            "required": [
+              "tool",
+              "decision",
+              "scope"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "default",
+        "rules"
+      ],
+      "additionalProperties": false
+    },
+    "providers": {
+      "default": {},
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    },
+    "mcp": {
+      "default": {
+        "servers": {}
+      },
+      "type": "object",
+      "properties": {
+        "servers": {
+          "default": {},
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {}
+        }
+      },
+      "required": [
+        "servers"
+      ],
+      "additionalProperties": false
+    },
+    "tools": {
+      "default": {},
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    },
+    "lsp": {
+      "default": {
+        "servers": {}
+      },
+      "type": "object",
+      "properties": {
+        "servers": {
+          "default": {},
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {}
+        }
+      },
+      "required": [
+        "servers"
+      ],
+      "additionalProperties": false
+    },
+    "skills": {
+      "default": {
+        "paths": []
+      },
+      "type": "object",
+      "properties": {
+        "paths": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "paths"
+      ],
+      "additionalProperties": false
+    },
+    "plugins": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "instructions": {
+      "default": [
+        "AGENTS.md"
+      ],
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "sandbox": {
+      "default": {
+        "enabled": true,
+        "network": false
+      },
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "type": "boolean"
+        },
+        "network": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled",
+        "network"
+      ],
+      "additionalProperties": false
+    },
+    "telemetry": {
+      "default": {
+        "enabled": false
+      },
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "additionalProperties": false
+    },
+    "ui": {
+      "default": {
+        "theme": "default"
+      },
+      "type": "object",
+      "properties": {
+        "theme": {
+          "default": "default",
+          "type": "string"
+        }
+      },
+      "required": [
+        "theme"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "agent",
+    "permissions",
+    "providers",
+    "mcp",
+    "tools",
+    "lsp",
+    "skills",
+    "plugins",
+    "instructions",
+    "sandbox",
+    "telemetry",
+    "ui"
+  ],
+  "additionalProperties": false
+}

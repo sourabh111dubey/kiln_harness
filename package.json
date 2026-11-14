@@ -1,0 +1,35 @@
+{
+  "name": "harness",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.18.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "dev": "turbo run dev",
+    "clean": "turbo run clean",
+    "schema": "tsx scripts/generate-schema.ts",
+    "changeset": "changeset",
+    "prepare": "lefthook install || true",
+    "perf": "tsx scripts/perf.ts",
+    "perf:check": "tsx scripts/perf.ts --check"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.7",
+    "@changesets/cli": "3.0.3",
+    "@types/node": "26.6.6",
+    "@vitest/coverage-v8": "5.1.0",
+    "lefthook": "2.2.2",
+    "tsx": "4.23.15",
+    "turbo": "2.11.11",
+    "typescript": "5.9.3",
+    "vitest": "5.1.0"
+  }
+}

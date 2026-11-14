@@ -1,0 +1,48 @@
+{
+  "name": "@harness/cli",
+  "version": "1.0.0",
+  "private": false,
+  "type": "module",
+  "bin": {
+    "harness": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "clean": "rm -rf dist .turbo coverage"
+  },
+  "dependencies": {
+    "@harness/core": "workspace:*",
+    "@harness/mcp": "workspace:*",
+    "@harness/shared": "workspace:*",
+    "@harness/server": "workspace:*",
+    "@harness/tui": "workspace:*",
+    "commander": "15.1.0",
+    "@harness/sandbox": "workspace:*",
+    "@harness/lsp": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "@vitest/coverage-v8": "5.1.0",
+    "tsup": "9.0.0",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "vitest": "5.1.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

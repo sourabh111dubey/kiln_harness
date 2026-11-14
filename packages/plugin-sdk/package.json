@@ -1,0 +1,36 @@
+{
+  "name": "@harness/plugin-sdk",
+  "version": "1.0.0",
+  "private": false,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "clean": "rm -rf dist .turbo coverage"
+  },
+  "dependencies": {
+    "@harness/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "@vitest/coverage-v8": "5.1.0",
+    "tsup": "9.0.0",
+    "typescript": "5.9.3",
+    "vitest": "5.1.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

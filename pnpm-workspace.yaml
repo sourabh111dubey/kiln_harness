@@ -1,0 +1,9 @@
+packages:
+  - "packages/*"
+  - "apps/*"
+  - "examples/*"
+
+allowBuilds:
+  esbuild: true
+  lefthook: true
+  protobufjs: true
