@@ -108,6 +108,7 @@ describe("cli commands", () => {
     const session = store.create({ cwd: dataDir, model: "fake/test", title: "CLI session" });
     store.appendMessage(session.id, { role: "user", content: "needle" });
     store.close();
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     const listed = await runCli(["sessions", "list"]);
     expect(listed.stdout).toContain(session.id);
