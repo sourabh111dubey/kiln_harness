@@ -1,15 +1,15 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { ProviderRegistry, SessionStore } from "@harness/core";
-import type { ProviderAdapter, ProviderCapabilities, StreamEvent } from "@harness/shared";
+import { ProviderRegistry, SessionStore } from "@kiln/core";
+import type { ProviderAdapter, ProviderCapabilities, StreamEvent } from "@kiln/shared";
 import { afterEach, describe, expect, it } from "vitest";
 import { runPrompt } from "../src/run-prompt";
 
 const directories: string[] = [];
 
 async function tempDir(): Promise<string> {
-  const directory = await mkdtemp(join(tmpdir(), "harness-cli-run-"));
+  const directory = await mkdtemp(join(tmpdir(), "kiln-cli-run-"));
   directories.push(directory);
   return directory;
 }
@@ -48,7 +48,7 @@ describe("runPrompt", () => {
   it("requires a model", async () => {
     const cwd = await tempDir();
     await expect(
-      runPrompt({ prompt: "hi", cwd, env: { HARNESS_CONFIG_DIR: cwd } }),
+      runPrompt({ prompt: "hi", cwd, env: { KILN_CONFIG_DIR: cwd } }),
     ).rejects.toMatchObject({ code: "invalid_argument" });
   });
 
@@ -58,7 +58,7 @@ describe("runPrompt", () => {
       runPrompt({
         prompt: "hi",
         cwd,
-        env: { HARNESS_CONFIG_DIR: cwd },
+        env: { KILN_CONFIG_DIR: cwd },
         model: "nope",
       }),
     ).rejects.toMatchObject({ code: "invalid_argument" });
@@ -70,7 +70,7 @@ describe("runPrompt", () => {
       runPrompt({
         prompt: "hi",
         cwd,
-        env: { HARNESS_CONFIG_DIR: cwd },
+        env: { KILN_CONFIG_DIR: cwd },
         model: "anthropic/claude-sonnet-4-5",
       }),
     ).rejects.toMatchObject({ code: "provider_error" });
@@ -84,7 +84,7 @@ describe("runPrompt", () => {
     const first = await runPrompt({
       prompt: "first",
       cwd,
-      env: { HARNESS_CONFIG_DIR: cwd },
+      env: { KILN_CONFIG_DIR: cwd },
       model: "fake/test",
       permissionMode: "default",
       registry,
@@ -102,7 +102,7 @@ describe("runPrompt", () => {
       const second = await runPrompt({
         prompt: "second",
         cwd,
-        env: { HARNESS_CONFIG_DIR: cwd },
+        env: { KILN_CONFIG_DIR: cwd },
         model: "fake/test",
         permissionMode: "default",
         registry,
@@ -125,7 +125,7 @@ describe("runPrompt", () => {
     const first = await runPrompt({
       prompt: "first",
       cwd,
-      env: { HARNESS_CONFIG_DIR: cwd },
+      env: { KILN_CONFIG_DIR: cwd },
       model: "fake/test",
       permissionMode: "default",
       registry,
@@ -135,7 +135,7 @@ describe("runPrompt", () => {
     const continued = await runPrompt({
       prompt: "second",
       cwd,
-      env: { HARNESS_CONFIG_DIR: cwd },
+      env: { KILN_CONFIG_DIR: cwd },
       model: "fake/test",
       permissionMode: "default",
       registry,

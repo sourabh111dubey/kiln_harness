@@ -1,5 +1,5 @@
 {
-  "name": "@harness/server",
+  "name": "@kiln/server",
   "version": "1.0.0",
   "private": false,
   "type": "module",
@@ -21,15 +21,15 @@
     "clean": "rm -rf dist .turbo coverage"
   },
   "dependencies": {
-    "@harness/core": "workspace:*",
-    "@harness/shared": "workspace:*",
+    "@kiln/core": "workspace:*",
+    "@kiln/shared": "workspace:*",
     "@hono/node-server": "2.1.8",
-    "@harness/mcp": "workspace:*",
+    "@kiln/mcp": "workspace:*",
     "hono": "4.13.18",
     "zod": "4.6.7",
-    "@harness/sandbox": "workspace:*",
+    "@kiln/sandbox": "workspace:*",
     "ws": "8.23.0",
-    "@harness/lsp": "workspace:*"
+    "@kiln/lsp": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "26.6.6",

@@ -10,5 +10,5 @@ export default defineConfig({
   clean: true,
   splitting: false,
   treeshake: true,
-  external: ["@harness/core", "@harness/shared", "@modelcontextprotocol/sdk", "zod"],
+  external: ["@kiln/core", "@kiln/shared", "@modelcontextprotocol/sdk", "zod"],
 });

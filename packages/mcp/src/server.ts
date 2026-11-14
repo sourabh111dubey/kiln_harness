@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
-import type { ToolDefinition, ToolOutput } from "@harness/shared";
-import { createLogger } from "@harness/shared";
+import type { ToolDefinition, ToolOutput } from "@kiln/shared";
+import { createLogger } from "@kiln/shared";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
@@ -35,7 +35,7 @@ export function createMcpServer(
   tools: ToolDefinition<unknown>[],
   options: { allowDestructive?: boolean } = {},
 ): McpServer {
-  const server = new McpServer({ name: "harness", version: "0.0.0" });
+  const server = new McpServer({ name: "kiln", version: "0.0.0" });
   const logger = createLogger({ level: "silent" });
   const exposed = options.allowDestructive ? tools : tools.filter((tool) => tool.readOnly);
 

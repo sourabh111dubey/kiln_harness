@@ -22,7 +22,7 @@ import {
 const directories: string[] = [];
 
 async function tempDir(): Promise<string> {
-  const directory = await mkdtemp(join(tmpdir(), "harness-common-"));
+  const directory = await mkdtemp(join(tmpdir(), "kiln-common-"));
   directories.push(directory);
   return directory;
 }

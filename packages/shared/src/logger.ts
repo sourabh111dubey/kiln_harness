@@ -36,8 +36,8 @@ const DEFAULT_REDACT_PATHS = [
 
 export function createLogger(options: LoggerOptions = {}): Logger {
   return pino({
-    name: options.name ?? "harness",
-    level: options.level ?? process.env.HARNESS_LOG_LEVEL ?? "info",
+    name: options.name ?? "kiln",
+    level: options.level ?? process.env.KILN_LOG_LEVEL ?? "info",
     base: options.base,
     redact: {
       paths: options.redact ?? DEFAULT_REDACT_PATHS,

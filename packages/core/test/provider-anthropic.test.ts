@@ -1,4 +1,4 @@
-import type { StreamRequest } from "@harness/shared";
+import type { StreamRequest } from "@kiln/shared";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AnthropicProvider } from "../src/provider/anthropic";
 import { collect, sseResponse } from "./helpers";

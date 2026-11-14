@@ -2,7 +2,7 @@
 import { realpathSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { renderHarnessTui } from "@harness/tui";
+import { renderKilnTui } from "@kiln/tui";
 import { Command } from "commander";
 import { registerConfigCommand } from "./commands/config";
 import { registerDoctorCommand } from "./commands/doctor";
@@ -17,8 +17,8 @@ export function createProgram(): Command {
   const program = new Command();
 
   program
-    .name("harness")
-    .description("A production coding agent harness")
+    .name("kiln")
+    .description("A production coding agent kiln")
     .version(readVersion(), "-v, --version")
     .argument("[prompt...]", "Initial prompt for the interactive session")
     .option("--model <model>", "Model to use, as provider/model")
@@ -45,7 +45,7 @@ export function createProgram(): Command {
     }
 
     try {
-      renderHarnessTui({
+      renderKilnTui({
         cwd: options.cwd,
         model: options.model,
         permissionMode: options.permissionMode,
@@ -54,7 +54,7 @@ export function createProgram(): Command {
       });
     } catch (error) {
       process.stderr.write(
-        `harness: failed to start TUI: ${error instanceof Error ? error.message : String(error)}\n`,
+        `kiln: failed to start TUI: ${error instanceof Error ? error.message : String(error)}\n`,
       );
       process.exitCode = 1;
     }
@@ -81,7 +81,7 @@ function isDirectInvocation(): boolean {
 if (isDirectInvocation()) {
   main().catch((error: unknown) => {
     const message = error instanceof Error ? error.message : String(error);
-    process.stderr.write(`harness: ${message}\n`);
+    process.stderr.write(`kiln: ${message}\n`);
     process.exitCode = 1;
   });
 }

@@ -13,14 +13,14 @@ import {
 const temporaryDirectories: string[] = [];
 
 async function makeTempDir(): Promise<string> {
-  const directory = await mkdtemp(join(tmpdir(), "harness-config-"));
+  const directory = await mkdtemp(join(tmpdir(), "kiln-config-"));
   temporaryDirectories.push(directory);
   return directory;
 }
 
 async function writeProjectConfig(directory: string, contents: string): Promise<string> {
-  const path = join(directory, ".harness", "config.json");
-  await mkdir(join(directory, ".harness"), { recursive: true });
+  const path = join(directory, ".kiln", "config.json");
+  await mkdir(join(directory, ".kiln"), { recursive: true });
   await writeFile(path, contents, "utf8");
   return path;
 }
@@ -52,7 +52,7 @@ describe("config", () => {
     const loaded = await loadConfig({
       cwd: directory,
       globalPath,
-      env: { HARNESS_PERMISSION_MODE: "acceptEdits" },
+      env: { KILN_PERMISSION_MODE: "acceptEdits" },
     });
 
     expect(loaded.config.model).toBe("project/model");
@@ -110,11 +110,11 @@ describe("config", () => {
       cwd: directory,
       globalPath: join(directory, "missing.json"),
       env: {
-        HARNESS_MODEL: "env/model",
-        HARNESS_SMALL_MODEL: "env/small",
-        HARNESS_AGENT: "plan",
-        HARNESS_PERMISSION_MODE: "bypassPermissions",
-        HARNESS_TELEMETRY: "true",
+        KILN_MODEL: "env/model",
+        KILN_SMALL_MODEL: "env/small",
+        KILN_AGENT: "plan",
+        KILN_PERMISSION_MODE: "bypassPermissions",
+        KILN_TELEMETRY: "true",
       },
     });
 
@@ -137,7 +137,7 @@ describe("config", () => {
 
   it("reports unreadable config paths", async () => {
     const directory = await makeTempDir();
-    const configPath = join(directory, ".harness", "config.json");
+    const configPath = join(directory, ".kiln", "config.json");
     await mkdir(configPath, { recursive: true });
 
     await expect(

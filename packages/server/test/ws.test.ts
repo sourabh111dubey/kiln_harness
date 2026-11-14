@@ -8,7 +8,7 @@ import { startServer } from "../src/app";
 const directories: string[] = [];
 
 async function tempDir(): Promise<string> {
-  const directory = await mkdtemp(join(tmpdir(), "harness-ws-"));
+  const directory = await mkdtemp(join(tmpdir(), "kiln-ws-"));
   directories.push(directory);
   return directory;
 }
@@ -30,7 +30,7 @@ describe("websocket bridge", () => {
       port: 4_123,
       hostname: "127.0.0.1",
       dataDir,
-      env: { HARNESS_CONFIG_DIR: dataDir, HARNESS_DATA_DIR: dataDir },
+      env: { KILN_CONFIG_DIR: dataDir, KILN_DATA_DIR: dataDir },
     });
 
     try {

@@ -4,7 +4,7 @@ coverage
 .turbo
 .git
 .github
-.harness
+.kiln
 *.log
 .env
 .env.*

@@ -1,5 +1,5 @@
 import { basename } from "node:path";
-import type { Usage } from "@harness/shared";
+import type { Usage } from "@kiln/shared";
 import { Box, Text } from "ink";
 import { color, type Theme } from "../theme";
 

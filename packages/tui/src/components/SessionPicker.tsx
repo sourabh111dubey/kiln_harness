@@ -1,4 +1,4 @@
-import type { Session } from "@harness/shared";
+import type { Session } from "@kiln/shared";
 import { Box, Text, useInput } from "ink";
 import { useState } from "react";
 import { color, type Theme } from "../theme";

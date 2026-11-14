@@ -9,7 +9,7 @@ logs/
 .env.*
 !.env.example
 .DS_Store
-.harness/
+.kiln/
 sessions/
 credentials.json
 audit.jsonl

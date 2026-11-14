@@ -13,14 +13,14 @@ describe("logger", () => {
     expect(redactValue("nothing to redact")).toBe("nothing to redact");
   });
 
-  it("uses the HARNESS_LOG_LEVEL fallback", () => {
-    const previous = process.env.HARNESS_LOG_LEVEL;
-    process.env.HARNESS_LOG_LEVEL = "error";
+  it("uses the KILN_LOG_LEVEL fallback", () => {
+    const previous = process.env.KILN_LOG_LEVEL;
+    process.env.KILN_LOG_LEVEL = "error";
     try {
       expect(createLogger().level).toBe("error");
     } finally {
-      if (previous === undefined) delete process.env.HARNESS_LOG_LEVEL;
-      else process.env.HARNESS_LOG_LEVEL = previous;
+      if (previous === undefined) delete process.env.KILN_LOG_LEVEL;
+      else process.env.KILN_LOG_LEVEL = previous;
     }
   });
 });

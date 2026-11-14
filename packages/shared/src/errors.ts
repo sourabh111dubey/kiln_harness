@@ -1,4 +1,4 @@
-export type HarnessErrorCode =
+export type KilnErrorCode =
   | "invalid_argument"
   | "invalid_config"
   | "not_implemented"
@@ -15,22 +15,22 @@ export type HarnessErrorCode =
   | "io_error"
   | "internal_error";
 
-export interface HarnessErrorOptions {
+export interface KilnErrorOptions {
   details?: Record<string, unknown>;
   cause?: unknown;
   recoverable?: boolean;
   hint?: string;
 }
 
-export class HarnessError extends Error {
-  readonly code: HarnessErrorCode;
+export class KilnError extends Error {
+  readonly code: KilnErrorCode;
   readonly details: Record<string, unknown>;
   readonly recoverable: boolean;
   readonly hint?: string;
 
-  constructor(code: HarnessErrorCode, message: string, options: HarnessErrorOptions = {}) {
+  constructor(code: KilnErrorCode, message: string, options: KilnErrorOptions = {}) {
     super(message, { cause: options.cause });
-    this.name = "HarnessError";
+    this.name = "KilnError";
     this.code = code;
     this.details = options.details ?? {};
     this.recoverable = options.recoverable ?? false;
@@ -50,50 +50,50 @@ export class HarnessError extends Error {
   }
 }
 
-export function isHarnessError(value: unknown): value is HarnessError {
-  return value instanceof HarnessError;
+export function isKilnError(value: unknown): value is KilnError {
+  return value instanceof KilnError;
 }
 
-export function toHarnessError(
+export function toKilnError(
   error: unknown,
-  fallbackCode: HarnessErrorCode = "internal_error",
-): HarnessError {
-  if (isHarnessError(error)) return error;
+  fallbackCode: KilnErrorCode = "internal_error",
+): KilnError {
+  if (isKilnError(error)) return error;
   if (error instanceof Error) {
     if (error.name === "AbortError" || (error as { code?: unknown }).code === "ABORT_ERR") {
-      return new HarnessError("aborted", error.message, { cause: error });
+      return new KilnError("aborted", error.message, { cause: error });
     }
-    return new HarnessError(fallbackCode, error.message, {
+    return new KilnError(fallbackCode, error.message, {
       cause: error,
       details: { name: error.name },
       recoverable: false,
     });
   }
-  return new HarnessError(fallbackCode, String(error), {
+  return new KilnError(fallbackCode, String(error), {
     details: { value: String(error) },
     recoverable: false,
   });
 }
 
 export const errors = {
-  invalidArgument: (message: string, details?: Record<string, unknown>): HarnessError =>
-    new HarnessError("invalid_argument", message, { details }),
-  invalidConfig: (message: string, hint?: string): HarnessError =>
-    new HarnessError("invalid_config", message, { hint }),
-  notImplemented: (feature: string): HarnessError =>
-    new HarnessError("not_implemented", `${feature} is not implemented yet`, {
+  invalidArgument: (message: string, details?: Record<string, unknown>): KilnError =>
+    new KilnError("invalid_argument", message, { details }),
+  invalidConfig: (message: string, hint?: string): KilnError =>
+    new KilnError("invalid_config", message, { hint }),
+  notImplemented: (feature: string): KilnError =>
+    new KilnError("not_implemented", `${feature} is not implemented yet`, {
       hint: "See plan.md for the milestone that delivers this feature.",
     }),
-  providerError: (message: string, cause?: unknown): HarnessError =>
-    new HarnessError("provider_error", message, { cause, recoverable: true }),
-  toolError: (tool: string, message: string, details?: Record<string, unknown>): HarnessError =>
-    new HarnessError("tool_error", `${tool}: ${message}`, { details }),
-  permissionDenied: (message: string): HarnessError =>
-    new HarnessError("permission_denied", message, { recoverable: false }),
-  sessionNotFound: (sessionID: string): HarnessError =>
-    new HarnessError("session_not_found", `Session ${sessionID} was not found`, {
+  providerError: (message: string, cause?: unknown): KilnError =>
+    new KilnError("provider_error", message, { cause, recoverable: true }),
+  toolError: (tool: string, message: string, details?: Record<string, unknown>): KilnError =>
+    new KilnError("tool_error", `${tool}: ${message}`, { details }),
+  permissionDenied: (message: string): KilnError =>
+    new KilnError("permission_denied", message, { recoverable: false }),
+  sessionNotFound: (sessionID: string): KilnError =>
+    new KilnError("session_not_found", `Session ${sessionID} was not found`, {
       details: { sessionID },
     }),
-  aborted: (reason?: string): HarnessError =>
-    new HarnessError("aborted", reason ?? "Operation aborted", { recoverable: false }),
+  aborted: (reason?: string): KilnError =>
+    new KilnError("aborted", reason ?? "Operation aborted", { recoverable: false }),
 };

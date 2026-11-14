@@ -1,6 +1,6 @@
-# Harness
+# Kiln
 
-A production-grade, model-agnostic coding agent harness.
+A production-grade, model-agnostic coding agent.
 
 > **Status:** Core + P1 integrations complete. Some planned P1 tools remain (see
 > "Remaining scope" in [plan.md](./plan.md#0-build-status)).
@@ -17,9 +17,9 @@ A production-grade, model-agnostic coding agent harness.
 Install globally or run with `npx`:
 
 ```sh
-npm i -g @harness/cli
-harness doctor
-harness
+npm i -g @kiln/cli
+kiln doctor
+kiln
 ```
 
 Or from this checkout:
@@ -34,8 +34,8 @@ node packages/cli/dist/index.js --version
 Docker:
 
 ```sh
-docker build -t harness .
-docker run --rm -it -p 4096:4096 -v "$PWD:/work" harness
+docker build -t kiln .
+docker run --rm -it -p 4096:4096 -v "$PWD:/work" kiln
 ```
 
 Launch the interactive TUI (requires a TTY):
@@ -60,7 +60,7 @@ allow workspace edits; shell commands still require a TUI approval or
 
 ## Sessions
 
-Sessions are persisted to `~/.harness` (override with `HARNESS_DATA_DIR`):
+Sessions are persisted to `~/.kiln` (override with `KILN_DATA_DIR`):
 
 - `index.db` — SQLite index for sessions, messages, and events
 - `sessions/<id>/events.jsonl` — append-only event mirror
@@ -68,17 +68,17 @@ Sessions are persisted to `~/.harness` (override with `HARNESS_DATA_DIR`):
 - `sessions/<id>/checkpoints/` — pre-write file snapshots
 
 ```sh
-harness run "continue the refactor" --continue
-harness run "keep going" --session ses_...
-harness sessions list
-harness sessions show ses_...
-harness sessions search "needle"
-harness sessions export ses_... --format md
-harness sessions fork ses_...
-harness sessions compact ses_...
-harness sessions delete ses_...
-harness undo --session ses_...
-harness audit
+kiln run "continue the refactor" --continue
+kiln run "keep going" --session ses_...
+kiln sessions list
+kiln sessions show ses_...
+kiln sessions search "needle"
+kiln sessions export ses_... --format md
+kiln sessions fork ses_...
+kiln sessions compact ses_...
+kiln sessions delete ses_...
+kiln undo --session ses_...
+kiln audit
 ```
 
 Context compaction is automatic at ~80% of the model's context window: older
@@ -87,7 +87,7 @@ forces it for a stored session.
 
 ## Interactive TUI
 
-`harness` (with no subcommand) launches the Ink TUI. It streams assistant text,
+`kiln` (with no subcommand) launches the Ink TUI. It streams assistant text,
 renders diffs and markdown, shows tool status, and prompts for permissions.
 
 Keys:
@@ -103,35 +103,35 @@ Commands:
 /cost  /context  /doctor  /exit
 ```
 
-Themes: `HARNESS_THEME=default|dim|highContrast`; `NO_COLOR=1` disables color.
-`HARNESS_DATA_DIR` relocates sessions and audit logs.
+Themes: `KILN_THEME=default|dim|highContrast`; `NO_COLOR=1` disables color.
+`KILN_DATA_DIR` relocates sessions and audit logs.
 
 ## Workspace
 
-| Package               | Purpose                                                                  |
-| --------------------- | ------------------------------------------------------------------------ |
-| `@harness/shared`     | Events, schemas, errors, config, logging, telemetry, provider contracts  |
-| `@harness/core`       | Agent loop, providers, permissions, tools, sessions, compaction, plugins |
-| `@harness/cli`        | `harness` command-line interface                                         |
-| `@harness/tui`        | Ink terminal UI (transcript, composer, diffs, modals)                    |
-| `@harness/server`     | HTTP/SSE/WebSocket daemon, session API, permission-resume flow           |
-| `@harness/sdk`        | Embed the agent in-process (no socket)                                   |
-| `@harness/mcp`        | MCP client, stdio server, Streamable HTTP server                         |
-| `@harness/plugin-sdk` | Plugin type definitions and `definePlugin`                               |
-| `@harness/sandbox`    | bwrap / seatbelt / Docker command wrapping                               |
-| `@harness/lsp`        | Language-server JSON-RPC client                                          |
-| `@harness/eval`       | Task runner and benchmark adapters                                       |
+| Package            | Purpose                                                                  |
+| ------------------ | ------------------------------------------------------------------------ |
+| `@kiln/shared`     | Events, schemas, errors, config, logging, telemetry, provider contracts  |
+| `@kiln/core`       | Agent loop, providers, permissions, tools, sessions, compaction, plugins |
+| `@kiln/cli`        | `kiln` command-line interface                                            |
+| `@kiln/tui`        | Ink terminal UI (transcript, composer, diffs, modals)                    |
+| `@kiln/server`     | HTTP/SSE/WebSocket daemon, session API, permission-resume flow           |
+| `@kiln/sdk`        | Embed the agent in-process (no socket)                                   |
+| `@kiln/mcp`        | MCP client, stdio server, Streamable HTTP server                         |
+| `@kiln/plugin-sdk` | Plugin type definitions and `definePlugin`                               |
+| `@kiln/sandbox`    | bwrap / seatbelt / Docker command wrapping                               |
+| `@kiln/lsp`        | Language-server JSON-RPC client                                          |
+| `@kiln/eval`       | Task runner and benchmark adapters                                       |
 
 ## Providers
 
-| Provider id  | Env var                   | Notes                                                     |
-| ------------ | ------------------------- | --------------------------------------------------------- |
-| `anthropic`  | `ANTHROPIC_API_KEY`       | Messages API, streaming tool calls                        |
-| `openai`     | `OPENAI_API_KEY`          | Chat Completions, OpenAI-compatible                       |
-| `openrouter` | `OPENROUTER_API_KEY`      | OpenAI-compatible routing; `OPENROUTER_BASE_URL` override |
-| `gemini`     | `GEMINI_API_KEY`          | `streamGenerateContent`                                   |
-| `ollama`     | `OLLAMA_HOST`             | Local, OpenAI-compatible, no key required                 |
-| `custom`     | `HARNESS_CUSTOM_BASE_URL` | Any OpenAI-compatible endpoint                            |
+| Provider id  | Env var                | Notes                                                     |
+| ------------ | ---------------------- | --------------------------------------------------------- |
+| `anthropic`  | `ANTHROPIC_API_KEY`    | Messages API, streaming tool calls                        |
+| `openai`     | `OPENAI_API_KEY`       | Chat Completions, OpenAI-compatible                       |
+| `openrouter` | `OPENROUTER_API_KEY`   | OpenAI-compatible routing; `OPENROUTER_BASE_URL` override |
+| `gemini`     | `GEMINI_API_KEY`       | `streamGenerateContent`                                   |
+| `ollama`     | `OLLAMA_HOST`          | Local, OpenAI-compatible, no key required                 |
+| `custom`     | `KILN_CUSTOM_BASE_URL` | Any OpenAI-compatible endpoint                            |
 
 Base URLs can be overridden with `ANTHROPIC_BASE_URL`, `OPENAI_BASE_URL`,
 `GEMINI_BASE_URL`, and `OLLAMA_HOST`.
@@ -150,7 +150,7 @@ Base URLs can be overridden with `ANTHROPIC_BASE_URL`, `OPENAI_BASE_URL`,
 ## Server API
 
 ```sh
-harness serve --port 4096
+kiln serve --port 4096
 ```
 
 The daemon exposes JSON + SSE:
@@ -184,22 +184,22 @@ curl -X POST localhost:4096/sessions/<id>/permissions/<requestID> \
   -H 'content-type: application/json' -d '{"decision":"allow"}'
 ```
 
-Set `HARNESS_TOKEN` to require `Authorization: Bearer <token>` for remote access.
+Set `KILN_TOKEN` to require `Authorization: Bearer <token>` for remote access.
 `GET /` serves a minimal browser page.
 
 ## SDK
 
 ```ts
-import { createHarness } from "@harness/sdk";
+import { createKiln } from "@kiln/sdk";
 
-const harness = createHarness({
+const kiln = createKiln({
   cwd: process.cwd(),
   model: "anthropic/claude-sonnet-4-5",
   permissionMode: "acceptEdits",
 });
 
-const session = await harness.createSession({ title: "embed" });
-const result = await harness.prompt(session.id, "fix the failing test", {
+const session = await kiln.createSession({ title: "embed" });
+const result = await kiln.prompt(session.id, "fix the failing test", {
   onEvent: (event) => console.log(event.type),
 });
 console.log(result.text, result.cost);
@@ -226,18 +226,18 @@ plugins, permissions, and tools.
 ```
 
 ```sh
-harness mcp list
-harness mcp serve       # expose harness tools over MCP stdio
+kiln mcp list
+kiln mcp serve       # expose kiln tools over MCP stdio
 ```
 
 A plugin exports a `Plugin` object with `hooks` (`session.start`,
 `message.received`, `tool.before`, `tool.after`, `event`), `tools`, and `commands`.
-See `examples/plugins/` and `@harness/plugin-sdk`.
+See `examples/plugins/` and `@kiln/plugin-sdk`.
 
 ## Configuration
 
-Configuration is JSONC. Precedence: defaults → `~/.harness/config.json` →
-`.harness/config.json` → `HARNESS_*` env vars → CLI flags.
+Configuration is JSONC. Precedence: defaults → `~/.kiln/config.json` →
+`.kiln/config.json` → `KILN_*` env vars → CLI flags.
 
 ```jsonc
 {
@@ -247,8 +247,8 @@ Configuration is JSONC. Precedence: defaults → `~/.harness/config.json` →
 }
 ```
 
-Run `harness config path` to print the global config location and
-`harness config schema` to print the JSON schema.
+Run `kiln config path` to print the global config location and
+`kiln config schema` to print the JSON schema.
 
 ## Security and release
 
@@ -259,22 +259,22 @@ Run `harness config path` to print the global config location and
 - [CHANGELOG.md](./CHANGELOG.md) — release notes.
 - `pnpm perf:check` — performance budgets.
 - `pnpm audit` — dependency audit.
-- Docker: `docker build -t harness .`
+- Docker: `docker build -t kiln .`
 
 ## CLI
 
 ```
-harness                            # interactive TUI
-harness "initial prompt"           # TUI with an initial prompt
-harness run [prompt...]            # non-interactive agent
-harness serve [--port 4096]        # HTTP/SSE daemon
-harness models list                # known models + configured providers
-harness sessions ...               # list/show/export/fork/search/compact/delete
-harness undo                       # restore the latest checkpoint
-harness audit                      # recent permission decisions
-harness mcp list|serve             # MCP servers / stdio tool server
-harness config path|schema|get     # configuration inspection
-harness doctor                     # environment diagnostics
+kiln                            # interactive TUI
+kiln "initial prompt"           # TUI with an initial prompt
+kiln run [prompt...]            # non-interactive agent
+kiln serve [--port 4096]        # HTTP/SSE daemon
+kiln models list                # known models + configured providers
+kiln sessions ...               # list/show/export/fork/search/compact/delete
+kiln undo                       # restore the latest checkpoint
+kiln audit                      # recent permission decisions
+kiln mcp list|serve             # MCP servers / stdio tool server
+kiln config path|schema|get     # configuration inspection
+kiln doctor                     # environment diagnostics
 ```
 
 Global options: `--model`, `--cwd`, `--agent`, `--permission-mode`, `--standalone`,

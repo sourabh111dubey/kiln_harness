@@ -10,5 +10,5 @@ export default defineConfig({
   clean: true,
   splitting: false,
   treeshake: true,
-  external: ["@harness/core", "@harness/shared", "ink", "react"],
+  external: ["@kiln/core", "@kiln/shared", "ink", "react"],
 });

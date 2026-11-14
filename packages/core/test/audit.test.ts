@@ -7,7 +7,7 @@ import { AuditLog, hashInput, summarizeInput } from "../src/session/audit";
 const directories: string[] = [];
 
 async function tempDir(): Promise<string> {
-  const directory = await mkdtemp(join(tmpdir(), "harness-audit-"));
+  const directory = await mkdtemp(join(tmpdir(), "kiln-audit-"));
   directories.push(directory);
   return directory;
 }

@@ -1,4 +1,4 @@
-import { harnessEventSchema } from "@harness/shared";
+import { kilnEventSchema } from "@kiln/shared";
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { globToRegExp, truncateText } from "../src/index";
@@ -26,7 +26,7 @@ describe("fuzz", () => {
   it("parses arbitrary objects without throwing", () => {
     fc.assert(
       fc.property(fc.dictionary(fc.string(), fc.anything()), (value) => {
-        expect(() => harnessEventSchema.safeParse(value)).not.toThrow();
+        expect(() => kilnEventSchema.safeParse(value)).not.toThrow();
       }),
       { numRuns: 200 },
     );

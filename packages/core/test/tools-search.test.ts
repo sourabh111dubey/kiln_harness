@@ -9,7 +9,7 @@ import { makeContext, makeTempDir, removeTempDir } from "./helpers";
 const directories: string[] = [];
 
 async function tempDir(): Promise<string> {
-  const directory = await makeTempDir("harness-search-");
+  const directory = await makeTempDir("kiln-search-");
   directories.push(directory);
   return directory;
 }

@@ -1,4 +1,4 @@
-import type { PermissionMode, PermissionRule } from "@harness/shared";
+import type { PermissionMode, PermissionRule } from "@kiln/shared";
 import { describe, expect, it } from "vitest";
 import { isDangerousCommand, PermissionEngine } from "../src/permissions/engine";
 

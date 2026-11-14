@@ -1,6 +1,6 @@
 import { readFile, stat } from "node:fs/promises";
 import { basename, join } from "node:path";
-import type { ToolDefinition } from "@harness/shared";
+import type { ToolDefinition } from "@kiln/shared";
 import { z } from "zod";
 import {
   assertInsideWorkspace,

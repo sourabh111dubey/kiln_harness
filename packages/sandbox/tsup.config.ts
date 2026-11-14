@@ -10,5 +10,5 @@ export default defineConfig({
   clean: true,
   splitting: false,
   treeshake: true,
-  external: ["@harness/shared"],
+  external: ["@kiln/shared"],
 });

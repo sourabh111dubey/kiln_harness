@@ -1,4 +1,4 @@
-import { configJsonSchema, loadConfig, resolveGlobalConfigPath } from "@harness/shared";
+import { configJsonSchema, loadConfig, resolveGlobalConfigPath } from "@kiln/shared";
 import type { Command } from "commander";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -13,7 +13,7 @@ export function getConfigValue(config: unknown, path: string): unknown {
 }
 
 export function registerConfigCommand(program: Command): void {
-  const config = program.command("config").description("Inspect harness configuration");
+  const config = program.command("config").description("Inspect kiln configuration");
 
   config
     .command("path")

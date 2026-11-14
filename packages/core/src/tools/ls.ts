@@ -1,7 +1,7 @@
 import type { Dirent } from "node:fs";
 import { readdir } from "node:fs/promises";
 import { join } from "node:path";
-import type { ToolDefinition } from "@harness/shared";
+import type { ToolDefinition } from "@kiln/shared";
 import { z } from "zod";
 import {
   assertInsideWorkspace,

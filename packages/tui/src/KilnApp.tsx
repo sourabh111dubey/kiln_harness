@@ -12,19 +12,19 @@ import {
   type ProviderRegistry,
   SessionStore,
   type ToolRegistry,
-} from "@harness/core";
-import { LspManager, type LspServerConfig } from "@harness/lsp";
-import { createSandbox } from "@harness/sandbox";
+} from "@kiln/core";
+import { LspManager, type LspServerConfig } from "@kiln/lsp";
+import { createSandbox } from "@kiln/sandbox";
 import {
   createLogger,
-  type HarnessConfig,
   ids,
+  type KilnConfig,
   loadConfig,
   type PermissionDecision,
   type PermissionMode,
   parseModelRef,
   type Session,
-} from "@harness/shared";
+} from "@kiln/shared";
 import { Box, render, Text, useApp } from "ink";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Composer } from "./components/Composer";
@@ -34,7 +34,7 @@ import { StatusBar } from "./components/StatusBar";
 import { Transcript, type TranscriptEntry } from "./components/Transcript";
 import { resolveTheme } from "./theme";
 
-export interface HarnessTuiOptions {
+export interface KilnTuiOptions {
   cwd?: string;
   model?: string;
   permissionMode?: PermissionMode;
@@ -70,7 +70,7 @@ function transcriptFromMessages(
   })) as TranscriptEntry[];
 }
 
-export function HarnessApp(options: HarnessTuiOptions): React.ReactNode {
+export function KilnApp(options: KilnTuiOptions): React.ReactNode {
   const { exit } = useApp();
   const env = options.env ?? process.env;
   const cwd = resolve(options.cwd ?? process.cwd());
@@ -81,11 +81,11 @@ export function HarnessApp(options: HarnessTuiOptions): React.ReactNode {
     () => options.registry ?? createDefaultProviderRegistry(env),
     [env, options.registry],
   );
-  const logger = useMemo(() => createLogger({ level: env.HARNESS_LOG_LEVEL ?? "info" }), [env]);
+  const logger = useMemo(() => createLogger({ level: env.KILN_LOG_LEVEL ?? "info" }), [env]);
   const audit = useMemo(() => new AuditLog(join(store.dataDir, "audit.jsonl")), [store]);
   const checkpoints = useMemo(() => new CheckpointManager(store.dataDir), [store]);
 
-  const [config, setConfig] = useState<HarnessConfig | null>(null);
+  const [config, setConfig] = useState<KilnConfig | null>(null);
   const [configError, setConfigError] = useState<string | null>(null);
   const [agent, setAgent] = useState<Agent | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -124,7 +124,7 @@ export function HarnessApp(options: HarnessTuiOptions): React.ReactNode {
       abortRef.current?.abort();
       abortRef.current = null;
 
-      const modelRef = modelOverride ?? existing?.model ?? config.model ?? env.HARNESS_MODEL;
+      const modelRef = modelOverride ?? existing?.model ?? config.model ?? env.KILN_MODEL;
       if (!modelRef) {
         addInfo("No model configured. Use /model <provider/model> or set model in config.");
         return null;
@@ -400,7 +400,7 @@ export function HarnessApp(options: HarnessTuiOptions): React.ReactNode {
           break;
         }
         case "doctor":
-          addInfo("Run `harness doctor` outside the TUI for environment diagnostics.");
+          addInfo("Run `kiln doctor` outside the TUI for environment diagnostics.");
           break;
         case "mcp":
         case "plugins":
@@ -493,14 +493,14 @@ export function HarnessApp(options: HarnessTuiOptions): React.ReactNode {
   }
 
   if (!config) {
-    return <Text>Loading harness...</Text>;
+    return <Text>Loading kiln...</Text>;
   }
 
   return (
     <Box flexDirection="column" paddingX={1}>
       <Box marginBottom={1}>
         <Text bold color={theme.accent}>
-          harness
+          kiln
         </Text>
         <Text color={theme.dim}> · {cwd}</Text>
       </Box>
@@ -547,6 +547,6 @@ export function HarnessApp(options: HarnessTuiOptions): React.ReactNode {
   );
 }
 
-export function renderHarnessTui(options: HarnessTuiOptions = {}): void {
-  render(<HarnessApp {...options} />);
+export function renderKilnTui(options: KilnTuiOptions = {}): void {
+  render(<KilnApp {...options} />);
 }

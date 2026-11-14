@@ -1,6 +1,6 @@
 import { mkdir, readFile, symlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { HarnessError } from "@harness/shared";
+import { KilnError } from "@kiln/shared";
 import { afterEach, describe, expect, it } from "vitest";
 import { editTool } from "../src/tools/edit";
 import { readTool } from "../src/tools/read";
@@ -10,7 +10,7 @@ import { makeContext, makeTempDir, removeTempDir } from "./helpers";
 const directories: string[] = [];
 
 async function tempDir(): Promise<string> {
-  const directory = await makeTempDir("harness-files-");
+  const directory = await makeTempDir("kiln-files-");
   directories.push(directory);
   return directory;
 }
@@ -40,9 +40,9 @@ describe("file tools", () => {
     const cwd = await tempDir();
     await expect(
       readTool.execute({ path: "missing.txt" }, makeContext(cwd)),
-    ).rejects.toBeInstanceOf(HarnessError);
+    ).rejects.toBeInstanceOf(KilnError);
     await expect(readTool.execute({ path: "../x" }, makeContext(cwd))).rejects.toBeInstanceOf(
-      HarnessError,
+      KilnError,
     );
   });
 

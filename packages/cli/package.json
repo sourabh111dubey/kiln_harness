@@ -1,10 +1,10 @@
 {
-  "name": "@harness/cli",
+  "name": "@kiln/cli",
   "version": "1.0.0",
   "private": false,
   "type": "module",
   "bin": {
-    "harness": "./dist/index.js"
+    "kiln": "./dist/index.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -25,14 +25,14 @@
     "clean": "rm -rf dist .turbo coverage"
   },
   "dependencies": {
-    "@harness/core": "workspace:*",
-    "@harness/mcp": "workspace:*",
-    "@harness/shared": "workspace:*",
-    "@harness/server": "workspace:*",
-    "@harness/tui": "workspace:*",
+    "@kiln/core": "workspace:*",
+    "@kiln/mcp": "workspace:*",
+    "@kiln/shared": "workspace:*",
+    "@kiln/server": "workspace:*",
+    "@kiln/tui": "workspace:*",
     "commander": "15.1.0",
-    "@harness/sandbox": "workspace:*",
-    "@harness/lsp": "workspace:*"
+    "@kiln/sandbox": "workspace:*",
+    "@kiln/lsp": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "26.6.6",

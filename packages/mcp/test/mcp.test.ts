@@ -1,7 +1,7 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createLogger } from "@harness/shared";
+import { createLogger } from "@kiln/shared";
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { afterEach, describe, expect, it } from "vitest";
 import { mcpResultToOutput, toolFromMcpTool } from "../src/client";
@@ -10,7 +10,7 @@ import { createMcpServer, mcpContentFromOutput } from "../src/server";
 const directories: string[] = [];
 
 async function tempDir(): Promise<string> {
-  const directory = await mkdtemp(join(tmpdir(), "harness-mcp-"));
+  const directory = await mkdtemp(join(tmpdir(), "kiln-mcp-"));
   directories.push(directory);
   return directory;
 }

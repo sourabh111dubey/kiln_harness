@@ -1,4 +1,4 @@
-import type { StreamRequest } from "@harness/shared";
+import type { StreamRequest } from "@kiln/shared";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { OpenAIProvider } from "../src/provider/openai";
 import { collect, sseResponse } from "./helpers";
@@ -129,15 +129,15 @@ describe("openai-compatible provider", () => {
         id: "openrouter",
         apiKey: "test",
         baseURL: "https://openrouter.ai/api/v1",
-        headers: { "HTTP-Referer": "https://harness.dev", "X-Title": "harness" },
+        headers: { "HTTP-Referer": "https://kiln.dev", "X-Title": "kiln" },
       }).stream(request),
     );
 
     const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
     const headers = new Headers(init.headers);
     expect(headers.get("authorization")).toBe("Bearer test");
-    expect(headers.get("http-referer")).toBe("https://harness.dev");
-    expect(headers.get("x-title")).toBe("harness");
+    expect(headers.get("http-referer")).toBe("https://kiln.dev");
+    expect(headers.get("x-title")).toBe("kiln");
   });
 
   it("throws a provider error on HTTP failure", async () => {

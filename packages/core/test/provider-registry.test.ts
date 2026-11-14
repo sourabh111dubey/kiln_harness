@@ -15,7 +15,7 @@ describe("provider registry", () => {
       OPENAI_API_KEY: "o",
       GEMINI_API_KEY: "g",
       OPENROUTER_API_KEY: "or",
-      HARNESS_CUSTOM_BASE_URL: "http://localhost:9999/v1",
+      KILN_CUSTOM_BASE_URL: "http://localhost:9999/v1",
     });
 
     expect(registry.has("anthropic")).toBe(true);

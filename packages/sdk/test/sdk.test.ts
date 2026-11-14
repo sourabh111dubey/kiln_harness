@@ -1,15 +1,15 @@
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createDefaultToolRegistry, ProviderRegistry } from "@harness/core";
-import type { ProviderAdapter, ProviderCapabilities, StreamEvent } from "@harness/shared";
+import { createDefaultToolRegistry, ProviderRegistry } from "@kiln/core";
+import type { ProviderAdapter, ProviderCapabilities, StreamEvent } from "@kiln/shared";
 import { afterEach, describe, expect, it } from "vitest";
-import { createHarness } from "../src/index";
+import { createKiln } from "../src/index";
 
 const directories: string[] = [];
 
 async function tempDir(): Promise<string> {
-  const directory = await mkdtemp(join(tmpdir(), "harness-sdk-"));
+  const directory = await mkdtemp(join(tmpdir(), "kiln-sdk-"));
   directories.push(directory);
   return directory;
 }
@@ -42,7 +42,7 @@ class FakeProvider implements ProviderAdapter {
   }
 }
 
-describe("harness SDK", () => {
+describe("kiln SDK", () => {
   it("creates a session, prompts, and resumes", async () => {
     const cwd = await tempDir();
     const dataDir = await tempDir();
@@ -56,30 +56,30 @@ describe("harness SDK", () => {
         { type: "finish", reason: "stop" },
       ],
     ]);
-    const harness = createHarness({
+    const kiln = createKiln({
       cwd,
       dataDir,
-      env: { HARNESS_CONFIG_DIR: dataDir, HARNESS_DATA_DIR: dataDir },
+      env: { KILN_CONFIG_DIR: dataDir, KILN_DATA_DIR: dataDir },
       model: "fake/test",
       registry: new ProviderRegistry().register(provider),
       tools: createDefaultToolRegistry(),
     });
 
     try {
-      const session = await harness.createSession({ title: "SDK test" });
-      const first = await harness.prompt(session.id, "first");
+      const session = await kiln.createSession({ title: "SDK test" });
+      const first = await kiln.prompt(session.id, "first");
       expect(first.text).toBe("First.");
       expect(first.sessionID).toBe(session.id);
 
-      const before = harness.store.readMessages(session.id).length;
-      const second = await harness.prompt(session.id, "second");
+      const before = kiln.store.readMessages(session.id).length;
+      const second = await kiln.prompt(session.id, "second");
       expect(second.text).toBe("Second.");
-      expect(harness.store.readMessages(session.id).length).toBeGreaterThan(before);
-      expect(harness.listSessions({ cwd }).some((entry) => entry.id === session.id)).toBe(true);
-      expect(harness.getSession(session.id)?.title).toBe("SDK test");
-      expect(harness.exportSession(session.id, "md")).toContain("# SDK test");
+      expect(kiln.store.readMessages(session.id).length).toBeGreaterThan(before);
+      expect(kiln.listSessions({ cwd }).some((entry) => entry.id === session.id)).toBe(true);
+      expect(kiln.getSession(session.id)?.title).toBe("SDK test");
+      expect(kiln.exportSession(session.id, "md")).toContain("# SDK test");
     } finally {
-      harness.close();
+      kiln.close();
     }
   });
 
@@ -99,10 +99,10 @@ describe("harness SDK", () => {
         { type: "finish", reason: "stop" },
       ],
     ]);
-    const harness = createHarness({
+    const kiln = createKiln({
       cwd,
       dataDir,
-      env: { HARNESS_CONFIG_DIR: dataDir, HARNESS_DATA_DIR: dataDir },
+      env: { KILN_CONFIG_DIR: dataDir, KILN_DATA_DIR: dataDir },
       model: "fake/test",
       permissionMode: "default",
       registry: new ProviderRegistry().register(provider),
@@ -111,28 +111,28 @@ describe("harness SDK", () => {
     });
 
     try {
-      const session = await harness.createSession();
-      const result = await harness.prompt(session.id, "write it");
+      const session = await kiln.createSession();
+      const result = await kiln.prompt(session.id, "write it");
       expect(result.text).toBe("Done.");
       expect(result.toolCalls).toBe(1);
       expect(await readFile(join(cwd, "sdk.txt"), "utf8")).toBe("from sdk\n");
     } finally {
-      harness.close();
+      kiln.close();
     }
   });
 
   it("requires a model", async () => {
     const cwd = await tempDir();
     const dataDir = await tempDir();
-    const harness = createHarness({
+    const kiln = createKiln({
       cwd,
       dataDir,
-      env: { HARNESS_CONFIG_DIR: dataDir, HARNESS_DATA_DIR: dataDir },
+      env: { KILN_CONFIG_DIR: dataDir, KILN_DATA_DIR: dataDir },
     });
     try {
-      await expect(harness.createSession()).rejects.toMatchObject({ code: "invalid_argument" });
+      await expect(kiln.createSession()).rejects.toMatchObject({ code: "invalid_argument" });
     } finally {
-      harness.close();
+      kiln.close();
     }
   });
 });

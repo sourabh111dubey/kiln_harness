@@ -2,7 +2,7 @@ import { execFile } from "node:child_process";
 import { access, constants } from "node:fs/promises";
 import { arch, platform, release } from "node:os";
 import { styleText } from "node:util";
-import { loadConfig, resolveGlobalConfigPath } from "@harness/shared";
+import { loadConfig, resolveGlobalConfigPath } from "@kiln/shared";
 import type { Command } from "commander";
 
 export type CheckStatus = "ok" | "warn" | "fail";
@@ -86,7 +86,7 @@ export async function runDoctor(options: DoctorOptions = {}): Promise<DoctorResu
       : {
           name: "Node.js",
           status: "fail",
-          detail: `${process.versions.node}; harness requires Node >= 24`,
+          detail: `${process.versions.node}; kiln requires Node >= 24`,
         },
   );
 
@@ -129,13 +129,13 @@ export async function runDoctor(options: DoctorOptions = {}): Promise<DoctorResu
 
   checks.push(await sandboxCheck());
 
-  const telemetry = env.HARNESS_TELEMETRY;
+  const telemetry = env.KILN_TELEMETRY;
   checks.push(
     telemetry
       ? {
           name: "Telemetry",
           status: "warn",
-          detail: `enabled by HARNESS_TELEMETRY=${telemetry}`,
+          detail: `enabled by KILN_TELEMETRY=${telemetry}`,
         }
       : { name: "Telemetry", status: "ok", detail: "disabled (opt-in)" },
   );

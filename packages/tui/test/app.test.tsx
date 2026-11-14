@@ -1,16 +1,16 @@
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { ProviderRegistry } from "@harness/core";
-import type { ProviderAdapter, ProviderCapabilities, StreamEvent } from "@harness/shared";
+import { ProviderRegistry } from "@kiln/core";
+import type { ProviderAdapter, ProviderCapabilities, StreamEvent } from "@kiln/shared";
 import { render } from "ink-testing-library";
 import { afterEach, describe, expect, it } from "vitest";
-import { HarnessApp } from "../src/HarnessApp";
+import { KilnApp } from "../src/KilnApp";
 
 const directories: string[] = [];
 
 async function tempDir(): Promise<string> {
-  const directory = await mkdtemp(join(tmpdir(), "harness-tui-"));
+  const directory = await mkdtemp(join(tmpdir(), "kiln-tui-"));
   directories.push(directory);
   return directory;
 }
@@ -78,11 +78,11 @@ class WriteProvider implements ProviderAdapter {
 describe("TUI app", () => {
   it("renders the shell and handles slash commands", async () => {
     const dataDir = await tempDir();
-    const env = { HARNESS_CONFIG_DIR: dataDir, HARNESS_DATA_DIR: dataDir };
+    const env = { KILN_CONFIG_DIR: dataDir, KILN_DATA_DIR: dataDir };
     const registry = new ProviderRegistry().register(new FakeProvider());
 
     const { stdin, lastFrame } = render(
-      <HarnessApp
+      <KilnApp
         env={env}
         dataDir={dataDir}
         model="fake/test"
@@ -91,7 +91,7 @@ describe("TUI app", () => {
       />,
     );
 
-    await waitFor(() => (lastFrame() ?? "").includes("harness"));
+    await waitFor(() => (lastFrame() ?? "").includes("kiln"));
     await waitFor(() => (lastFrame() ?? "").includes("test"));
 
     stdin.write("/help");
@@ -102,11 +102,11 @@ describe("TUI app", () => {
 
   it("sends a prompt and renders the streamed answer", async () => {
     const dataDir = await tempDir();
-    const env = { HARNESS_CONFIG_DIR: dataDir, HARNESS_DATA_DIR: dataDir };
+    const env = { KILN_CONFIG_DIR: dataDir, KILN_DATA_DIR: dataDir };
     const registry = new ProviderRegistry().register(new FakeProvider());
 
     const { stdin, lastFrame } = render(
-      <HarnessApp
+      <KilnApp
         env={env}
         dataDir={dataDir}
         model="fake/test"
@@ -115,7 +115,7 @@ describe("TUI app", () => {
       />,
     );
 
-    await waitFor(() => (lastFrame() ?? "").includes("harness"));
+    await waitFor(() => (lastFrame() ?? "").includes("kiln"));
     await waitFor(() => (lastFrame() ?? "").includes("ses_"));
     stdin.write("hello");
     await delay(20);
@@ -126,7 +126,7 @@ describe("TUI app", () => {
   it("asks for permission, executes the tool, and continues", async () => {
     const cwd = await tempDir();
     const dataDir = await tempDir();
-    const env = { HARNESS_CONFIG_DIR: dataDir, HARNESS_DATA_DIR: dataDir };
+    const env = { KILN_CONFIG_DIR: dataDir, KILN_DATA_DIR: dataDir };
     const args = JSON.stringify({ path: "a.txt", content: "hello\n" });
     const provider = new WriteProvider([
       [
@@ -142,7 +142,7 @@ describe("TUI app", () => {
     ]);
 
     const { stdin, lastFrame } = render(
-      <HarnessApp
+      <KilnApp
         cwd={cwd}
         env={env}
         dataDir={dataDir}
@@ -152,7 +152,7 @@ describe("TUI app", () => {
       />,
     );
 
-    await waitFor(() => (lastFrame() ?? "").includes("harness"));
+    await waitFor(() => (lastFrame() ?? "").includes("kiln"));
     await waitFor(() => (lastFrame() ?? "").includes("ses_"));
     stdin.write("write it");
     await delay(20);

@@ -2,13 +2,13 @@ import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import type {
   ChatMessage,
-  HarnessEvent,
+  KilnEvent,
   Plugin,
   PluginContext,
   PluginModule,
   ToolCall,
   ToolOutput,
-} from "@harness/shared";
+} from "@kiln/shared";
 
 export class PluginHost {
   constructor(
@@ -103,7 +103,7 @@ export class PluginHost {
     return output;
   }
 
-  async emit(event: HarnessEvent): Promise<void> {
+  async emit(event: KilnEvent): Promise<void> {
     for (const plugin of this.plugins) {
       try {
         await plugin.hooks?.event?.(this.context, event);

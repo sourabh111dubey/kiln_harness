@@ -6,13 +6,13 @@ import {
   modelInfoFor,
   resolveDataDir,
   SessionStore,
-} from "@harness/core";
-import { parseModelRef } from "@harness/shared";
+} from "@kiln/core";
+import { parseModelRef } from "@kiln/shared";
 import type { Command } from "commander";
 
 function fail(error: unknown): void {
   const message = error instanceof Error ? error.message : String(error);
-  process.stderr.write(`harness: ${message}\n`);
+  process.stderr.write(`kiln: ${message}\n`);
   process.exitCode = 1;
 }
 

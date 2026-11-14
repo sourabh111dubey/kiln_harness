@@ -1,4 +1,4 @@
-import type { ModelInfo } from "@harness/shared";
+import type { ModelInfo } from "@kiln/shared";
 
 export const MODEL_CATALOG: Record<string, ModelInfo> = {
   "openrouter/anthropic/claude-sonnet-4.5": {

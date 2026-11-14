@@ -1,15 +1,15 @@
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createDefaultToolRegistry, ProviderRegistry } from "@harness/core";
-import type { ProviderAdapter, ProviderCapabilities, StreamEvent } from "@harness/shared";
+import { createDefaultToolRegistry, ProviderRegistry } from "@kiln/core";
+import type { ProviderAdapter, ProviderCapabilities, StreamEvent } from "@kiln/shared";
 import { afterEach, describe, expect, it } from "vitest";
-import { createHarnessApp } from "../src/app";
+import { createKilnApp } from "../src/app";
 
 const directories: string[] = [];
 
 async function tempDir(): Promise<string> {
-  const directory = await mkdtemp(join(tmpdir(), "harness-server-"));
+  const directory = await mkdtemp(join(tmpdir(), "kiln-server-"));
   directories.push(directory);
   return directory;
 }
@@ -43,16 +43,16 @@ class FakeProvider implements ProviderAdapter {
 }
 
 async function makeApp(provider: FakeProvider, cwd: string, dataDir: string) {
-  return createHarnessApp({
+  return createKilnApp({
     cwd,
     dataDir,
-    env: { HARNESS_CONFIG_DIR: dataDir, HARNESS_DATA_DIR: dataDir },
+    env: { KILN_CONFIG_DIR: dataDir, KILN_DATA_DIR: dataDir },
     registry: new ProviderRegistry().register(provider),
     tools: createDefaultToolRegistry(),
   });
 }
 
-describe("harness server", () => {
+describe("kiln server", () => {
   it("serves health, info, tools, and models", async () => {
     const cwd = await tempDir();
     const dataDir = await tempDir();

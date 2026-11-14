@@ -6,7 +6,7 @@ import {
   type ProviderCapabilities,
   type StreamEvent,
   type StreamRequest,
-} from "@harness/shared";
+} from "@kiln/shared";
 import { fetchJson, isRecord, numberOr, openSse, sseData } from "./http";
 import { modelInfoFor } from "./models";
 

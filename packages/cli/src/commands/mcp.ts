@@ -1,6 +1,6 @@
-import { createDefaultToolRegistry } from "@harness/core";
-import { startMcpStdioServer } from "@harness/mcp";
-import { loadConfig } from "@harness/shared";
+import { createDefaultToolRegistry } from "@kiln/core";
+import { startMcpStdioServer } from "@kiln/mcp";
+import { loadConfig } from "@kiln/shared";
 import type { Command } from "commander";
 
 export function registerMcpCommand(program: Command): void {
@@ -27,11 +27,11 @@ export function registerMcpCommand(program: Command): void {
 
   mcp
     .command("serve")
-    .description("Expose harness tools over MCP stdio")
+    .description("Expose kiln tools over MCP stdio")
     .option("--allow-destructive", "Expose mutating tools (requires trust)")
     .action(async (options: { allowDestructive?: boolean }) => {
       const tools = createDefaultToolRegistry();
-      process.stderr.write("harness MCP server ready on stdio\n");
+      process.stderr.write("kiln MCP server ready on stdio\n");
       await startMcpStdioServer(tools.list(), {
         allowDestructive: options.allowDestructive === true,
       });

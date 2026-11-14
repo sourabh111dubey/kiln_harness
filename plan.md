@@ -1,9 +1,9 @@
-# Harness — Production Coding Agent Harness
+# Kiln — Production Coding Agent
 
 **Status:** 1.0.0 release candidate — M5 complete
-**Last updated:** 2026-11-14
+**Last updated:** 2026-11-15
 **Runtime target:** Node.js ≥ 24 (validated on Node 26), TypeScript, pnpm 12
-**Codename:** `harness` (CLI binary: `harness`; packages: `@harness/*`)
+**Codename:** `kiln` (CLI binary: `kiln`; packages: `@kiln/*`)
 
 > This document is the build specification. It is intentionally exhaustive: every
 > feature below is either **P0** (required for 1.0), **P1** (required for a
@@ -18,15 +18,15 @@ M0:
 
 - pnpm workspace, Turbo task graph, strict TypeScript, tsup builds, Biome,
   Vitest with coverage thresholds, Changesets, GitHub Actions CI.
-- `@harness/shared`: ULID-style ids, typed errors, session/message/part/event
+- `@kiln/shared`: ULID-style ids, typed errors, session/message/part/event
   schemas, permission types, provider/tool contracts, usage/cost math, JSONC
   config loading with precedence and validation, structured logging, OTel
   tracer bootstrap, and generated `config.schema.json`.
-- `@harness/cli`: `harness --version`, `--help`, `models`, `config`, `doctor`.
+- `@kiln/cli`: `kiln --version`, `--help`, `models`, `config`, `doctor`.
 
 M1:
 
-- `@harness/core`: provider registry with Anthropic, OpenAI-compatible (OpenAI,
+- `@kiln/core`: provider registry with Anthropic, OpenAI-compatible (OpenAI,
   OpenRouter, Ollama, custom), and Gemini streaming adapters; normalized SSE
   parsing; streaming agent loop with parallel read-only tools, abort, turn caps,
   and duplicate-input validation.
@@ -36,7 +36,7 @@ M1:
 - Built-in tools: `read`, `write`, `edit`, `glob`, `grep`, `ls`, `bash`,
   `todo_write`; atomic writes, unified diffs, timeouts, output truncation,
   environment scrubbing for shell commands.
-- `harness run` with text/JSON output, config-driven model selection, provider
+- `kiln run` with text/JSON output, config-driven model selection, provider
   auto-discovery, and error hints.
 - Model catalog with context windows and pricing; cost accumulation per turn.
 
@@ -46,16 +46,16 @@ M2:
   fork, and delete; JSONL event mirror per session.
 - Resume (`--session`) and continue (`--continue`); the agent restores messages,
   usage, cost, and todos.
-- Checkpoint manager snapshots files before `write`/`edit`; `harness undo` restores
+- Checkpoint manager snapshots files before `write`/`edit`; `kiln undo` restores
   the latest checkpoint.
 - Automatic context compaction at ~80% of the model context window, plus
   `sessions compact`.
-- Permission audit log with hashed inputs and readable summaries; `harness audit`.
+- Permission audit log with hashed inputs and readable summaries; `kiln audit`.
 - CLI: `sessions list|show|export|search|fork|delete|compact`, `undo`, `audit`.
 
 M3:
 
-- `@harness/tui` on Ink 8 + React 19.
+- `@kiln/tui` on Ink 8 + React 19.
 - Streaming transcript with assistant text, tool calls, diffs, terminal output,
   JSON, errors, and info entries.
 - Markdown renderer (headings, lists, code fences, inline formatting) and unified
@@ -66,30 +66,30 @@ M3:
   async `askPermission` hook; session picker; status bar with tokens/cost.
 - Slash commands: `/help`, `/clear`, `/new`, `/sessions`, `/model`, `/compact`,
   `/cost`, `/context`, `/doctor`, `/exit`.
-- Themes (`default`, `dim`, `highContrast`), `NO_COLOR`, and `HARNESS_THEME`.
-- `harness` with no subcommand launches the TUI; `harness run` remains headless.
+- Themes (`default`, `dim`, `highContrast`), `NO_COLOR`, and `KILN_THEME`.
+- `kiln` with no subcommand launches the TUI; `kiln run` remains headless.
 
 M4:
 
-- `@harness/server`: Hono daemon with JSON + SSE API, session CRUD, prompt streaming,
+- `@kiln/server`: Hono daemon with JSON + SSE API, session CRUD, prompt streaming,
   event replay, abort, compact, tools/models/info, OpenAPI document, optional bearer
   token, CORS, and a minimal browser page.
 - Async permission requests over SSE: the stream emits `permission.requested`; a
   client resolves it with `POST /sessions/:id/permissions/:requestID` and the turn
   resumes.
-- `@harness/sdk`: in-process `createHarness()` with `createSession`, `prompt`,
+- `@kiln/sdk`: in-process `createKiln()` with `createSession`, `prompt`,
   `listSessions`, `getSession`, `deleteSession`, `exportSession`, `compact`, and
   plugin support.
-- `@harness/plugin-sdk`: `Plugin`, hooks, tools, commands, and `definePlugin`.
+- `@kiln/plugin-sdk`: `Plugin`, hooks, tools, commands, and `definePlugin`.
 - Plugin loader (`loadPlugins`) and `PluginHost` hooks: `session.start`,
   `message.received`, `tool.before` (including `block`), `tool.after`, and `event`.
-- `@harness/mcp`: MCP client for stdio and Streamable HTTP, tool discovery/namespacing,
-  JSON Schema passthrough, and an MCP stdio server exposing harness tools.
-- CLI: `harness serve`, `harness mcp list`, `harness mcp serve`.
+- `@kiln/mcp`: MCP client for stdio and Streamable HTTP, tool discovery/namespacing,
+  JSON Schema passthrough, and an MCP stdio server exposing kiln tools.
+- CLI: `kiln serve`, `kiln mcp list`, `kiln mcp serve`.
 
 M5:
 
-- Version `1.0.0` and publish metadata for all `@harness/*` packages.
+- Version `1.0.0` and publish metadata for all `@kiln/*` packages.
 - Performance budget runner (`pnpm perf`, `pnpm perf:check`) measuring CLI cold
   start, bash spawn, 10k-event replay, 1k-message search, and RSS.
 - Fuzz/property tests (`fast-check`) for glob conversion, truncation, event parsing,
@@ -127,18 +127,18 @@ plugin-sdk = **161 tests**. Measured budgets on this machine:
 
 P1 completion:
 
-- **Sandbox** — `@harness/sandbox` wraps bash with bubblewrap (Linux),
+- **Sandbox** — `@kiln/sandbox` wraps bash with bubblewrap (Linux),
   sandbox-exec (macOS), or Docker; `sandbox.enabled` is honored by CLI, server,
   SDK, and TUI.
 - **WebSocket** — `/ws` JSON bridge for session list/create, prompt streaming,
-  permission resolution, and abort; optional `HARNESS_TOKEN`.
+  permission resolution, and abort; optional `KILN_TOKEN`.
 - **MCP HTTP** — stateless Streamable HTTP transport at `/mcp`; MCP client
   supports stdio and Streamable HTTP.
-- **LSP** — `@harness/lsp` JSON-RPC client with diagnostics, document symbols,
+- **LSP** — `@kiln/lsp` JSON-RPC client with diagnostics, document symbols,
   didOpen, and shutdown; `lsp_diagnostics` and `lsp_symbols` tools.
-- **Eval** — `@harness/eval` task runner, expected-file checks, scoring, and
+- **Eval** — `@kiln/eval` task runner, expected-file checks, scoring, and
   SWE-bench Lite / Terminal-Bench row adapters.
-- **Plugin reload** — SDK `harness.reload()` re-reads config, reloads plugins, and
+- **Plugin reload** — SDK `kiln.reload()` re-reads config, reloads plugins, and
   clears cached agents.
 
 Tests: 33 shared + 94 core + 10 CLI + 16 TUI + 3 SDK + 5 server + 5 MCP + 1
@@ -157,23 +157,23 @@ native Windows sandbox (Docker/WSL2 fallback).
 
 ## 1. Executive summary
 
-We are building a full-stack, model-agnostic coding agent harness. It is not a
+We are building a full-stack, model-agnostic coding agent kiln. It is not a
 single CLI script: it is an agent runtime with a clean client/server split,
 a terminal UI, an embeddable SDK, an HTTP/WebSocket API, a plugin system, MCP
-support, sandboxing, and a regression-eval harness.
+support, sandboxing, and a regression-eval kiln.
 
 The product surface:
 
-| Surface               | Description                                | Priority |
-| --------------------- | ------------------------------------------ | -------- |
-| `harness` (TUI)       | Interactive terminal coding agent          | P0       |
-| `harness run`         | Non-interactive / scripted / CI mode       | P0       |
-| `harness serve`       | Background daemon exposing HTTP + WS API   | P1       |
-| `@harness/sdk`        | Embed the agent in other Node apps         | P1       |
-| `@harness/plugin-sdk` | Third-party tools, hooks, commands, themes | P1       |
-| MCP client + server   | External tool/resource integration         | P1       |
-| `@harness/web`        | Browser client for remote sessions         | P2       |
-| `@harness/eval`       | Trajectory + benchmark regression suite    | P1       |
+| Surface             | Description                                | Priority |
+| ------------------- | ------------------------------------------ | -------- |
+| `kiln` (TUI)        | Interactive terminal coding agent          | P0       |
+| `kiln run`          | Non-interactive / scripted / CI mode       | P0       |
+| `kiln serve`        | Background daemon exposing HTTP + WS API   | P1       |
+| `@kiln/sdk`         | Embed the agent in other Node apps         | P1       |
+| `@kiln/plugin-sdk`  | Third-party tools, hooks, commands, themes | P1       |
+| MCP client + server | External tool/resource integration         | P1       |
+| `@kiln/web`         | Browser client for remote sessions         | P2       |
+| `@kiln/eval`        | Trajectory + benchmark regression suite    | P1       |
 
 Design principles:
 
@@ -223,7 +223,7 @@ Design principles:
 ┌────────────┐   stdio/IPC    ┌─────────────┐   HTTP/WS   ┌──────────────┐
 │  TUI (Ink) │ ─────────────► │  CLI client │ ──────────► │              │
 └────────────┘                └─────────────┘             │              │
-┌────────────┐                                          │  harness     │
+┌────────────┐                                          │  kiln     │
 │  SDK / app │ ─────────────► in-process ──────────────► │  daemon      │
 └────────────┘                                          │ (server)     │
 ┌────────────┐                                          │              │
@@ -252,25 +252,25 @@ Design principles:
 ### 3.2 Package graph
 
 ```
-@harness/shared          types, zod schemas, errors, ids, event contracts
-@harness/core            agent loop, sessions, providers, tools, permissions
-@harness/provider-*      per-provider adapters (or one package with subpaths)
-@harness/tools           built-in tool implementations
-@harness/sandbox         OS sandbox adapters + policy
-@harness/lsp             language-server client
-@harness/mcp             MCP client + MCP server
-@harness/plugin-sdk      public plugin API + loader
-@harness/server          Hono HTTP + WS, OpenAPI, daemon lifecycle
-@harness/cli             command parser, client wiring, auth, config commands
-@harness/tui             Ink terminal UI
-@harness/sdk             embeddable facade (re-exports core + server)
-@harness/web             optional browser client (P2)
-@harness/eval            benchmark runner, scorers, fixture corpus
-@harness/test-utils      mock providers, fixtures, in-memory stores
+@kiln/shared          types, zod schemas, errors, ids, event contracts
+@kiln/core            agent loop, sessions, providers, tools, permissions
+@kiln/provider-*      per-provider adapters (or one package with subpaths)
+@kiln/tools           built-in tool implementations
+@kiln/sandbox         OS sandbox adapters + policy
+@kiln/lsp             language-server client
+@kiln/mcp             MCP client + MCP server
+@kiln/plugin-sdk      public plugin API + loader
+@kiln/server          Hono HTTP + WS, OpenAPI, daemon lifecycle
+@kiln/cli             command parser, client wiring, auth, config commands
+@kiln/tui             Ink terminal UI
+@kiln/sdk             embeddable facade (re-exports core + server)
+@kiln/web             optional browser client (P2)
+@kiln/eval            benchmark runner, scorers, fixture corpus
+@kiln/test-utils      mock providers, fixtures, in-memory stores
 ```
 
 Dependency rule: `tui`/`cli`/`server` → `core` → `shared`. `tools`, `sandbox`,
-`lsp`, `mcp` are siblings injected into `core` via a `HarnessContext`. No cycles.
+`lsp`, `mcp` are siblings injected into `core` via a `KilnContext`. No cycles.
 `plugin-sdk` depends only on `shared`.
 
 ---
@@ -278,7 +278,7 @@ Dependency rule: `tui`/`cli`/`server` → `core` → `shared`. `tools`, `sandbox
 ## 4. Repository layout
 
 ```
-harness/
+kiln/
 ├── plan.md
 ├── package.json                  # workspace root, scripts, engines
 ├── pnpm-workspace.yaml
@@ -350,7 +350,7 @@ harness/
 | Git             | Not integrated yet                                    | `execFile` + system git planned                 |
 | LSP             | `vscode-languageserver-protocol` + custom client      | Spawn stdio servers                             |
 | Observability   | `pino` logs + OpenTelemetry SDK                       | Traces, metrics, cost                           |
-| Packaging       | npm + standalone binaries + Docker + Homebrew         | `npx harness`, `brew install`, `docker run`     |
+| Packaging       | npm + standalone binaries + Docker + Homebrew         | `npx kiln`, `brew install`, `docker run`        |
 
 Notes:
 
@@ -365,7 +365,7 @@ Notes:
 
 ## 6. Domain model
 
-All entities live in `@harness/shared`. IDs are prefixed ULIDs (time-sortable).
+All entities live in `@kiln/shared`. IDs are prefixed ULIDs (time-sortable).
 
 ```ts
 type SessionID = `ses_${string}`;
@@ -400,7 +400,7 @@ interface Message {
   createdAt: string;
   modelID?: string;
   usage?: Usage;
-  error?: HarnessError;
+  error?: KilnError;
 }
 
 type Part =
@@ -435,7 +435,7 @@ type ToolOutput =
 ### 6.1 Event log (append-only)
 
 ```ts
-type HarnessEvent =
+type KilnEvent =
   | { type: "session.created"; session: Session }
   | { type: "session.updated"; patch: Partial<Session> }
   | { type: "session.status"; status: Session["status"]; reason?: string }
@@ -451,13 +451,13 @@ type HarnessEvent =
   | { type: "compaction.started"; reason: string; tokensBefore: number }
   | { type: "compaction.completed"; summary: string; tokensAfter: number }
   | { type: "checkpoint.created"; hash: string; label: string }
-  | { type: "error"; error: HarnessError; recoverable: boolean }
+  | { type: "error"; error: KilnError; recoverable: boolean }
   | { type: "session.archived"; sessionID: SessionID };
 ```
 
-- Persist as JSONL (`~/.harness/sessions/<id>/events.jsonl`) + a SQLite index
+- Persist as JSONL (`~/.kiln/sessions/<id>/events.jsonl`) + a SQLite index
   for queries. Replay reconstructs the exact in-memory state.
-- Checkpoints are git snapshots; `harness undo` restores.
+- Checkpoints are git snapshots; `kiln undo` restores.
 
 ---
 
@@ -510,7 +510,7 @@ System prompt is composed from ordered, versioned sections:
 
 1. Identity and operating rules.
 2. Environment block (OS, cwd, git status, date, shell, model, permissions).
-3. Project instructions (`AGENTS.md` / `HARNESS.md` hierarchy, nearest wins).
+3. Project instructions (`AGENTS.md` / `KILN.md` hierarchy, nearest wins).
 4. Memory (user/project memory files, capped).
 5. Skills index (name + description + path; full body loaded on demand).
 6. Tool usage guidance (generated from actual registered tool schemas).
@@ -567,8 +567,8 @@ interface ProviderAdapter {
   snapshot for offline.
 - **Fallback chains:** primary → secondary → local, triggered by auth/quota/5xx,
   configurable per session. Fallback emits a visible warning.
-- **Auth:** env (`ANTHROPIC_API_KEY`, etc.), `harness auth login` OAuth/device
-  flow, OS keychain, or `~/.harness/credentials.json` (0600). Never log secrets;
+- **Auth:** env (`ANTHROPIC_API_KEY`, etc.), `kiln auth login` OAuth/device
+  flow, OS keychain, or `~/.kiln/credentials.json` (0600). Never log secrets;
   redact by default.
 - **Cost tracking:** tokens × per-model input/output/cache rates, accumulated per
   session and per turn; surfaced in TUI status line and `/cost`.
@@ -579,7 +579,7 @@ interface ProviderAdapter {
 
 Every tool has: stable id, Zod input schema, JSON Schema export, `readOnly`
 flag, `parallelizable` flag, timeout, permission default, and a concise model
-description. Tools are namespaced (`harness_read`, `mcp_<server>_<tool>`).
+description. Tools are namespaced (`kiln_read`, `mcp_<server>_<tool>`).
 
 ### 9.1 Built-in tools
 
@@ -694,7 +694,7 @@ interface PermissionPolicy {
 
 - Sandbox policy: read-only root FS, writable workspace/tmp, no network by default
   for shell (configurable), CPU/memory/time limits, PID limit, no new privileges.
-- `harness doctor` verifies the sandbox actually works (escape test, network test).
+- `kiln doctor` verifies the sandbox actually works (escape test, network test).
 - Sandbox failure = deny execution with actionable error.
 
 ---
@@ -711,7 +711,7 @@ interface PermissionPolicy {
   file tree is capped; `AGENTS.md` injected fully.
 - **Micro-compaction:** when a single tool result is oversized, replace with a
   summary + pointer rather than compacting the whole session.
-- **Manual controls:** `/compact`, `/clear`, `/context`, `harness compact`.
+- **Manual controls:** `/compact`, `/clear`, `/context`, `kiln compact`.
 - **Prompt caching:** stable prefix ordering; cache-friendly breakpoints for
   Anthropic; usage deltas reported.
 
@@ -722,7 +722,7 @@ interface PermissionPolicy {
 - Store layout:
 
 ```
-~/.harness/
+~/.kiln/
 ├── sessions/<sessionID>/
 │   ├── meta.json
 │   ├── events.jsonl
@@ -736,10 +736,10 @@ interface PermissionPolicy {
 └── config.json           # user-level config
 ```
 
-- **Resume:** `harness --resume <id>`, `--continue` (latest in cwd), TUI session
+- **Resume:** `kiln --resume <id>`, `--continue` (latest in cwd), TUI session
   picker.
 - **Fork:** branch a session from any message (copy-on-write event log).
-- **Export:** `harness export <id> --format md|json|html`.
+- **Export:** `kiln export <id> --format md|json|html`.
 - **Search:** full-text over messages/tool output (SQLite FTS5).
 - **Retention:** configurable TTL; auto-archive idle sessions.
 - **Recovery:** WAL + periodic snapshot; replay events on startup; corrupt tail
@@ -752,8 +752,8 @@ interface PermissionPolicy {
 ## 13. Git integration
 
 - Repo detection (`.git` upward), worktree support, submodule awareness.
-- Per-session optional worktree at `~/.harness/worktrees/<sessionID>` with branch
-  `harness/<slug>`; cleanup policy on archive.
+- Per-session optional worktree at `~/.kiln/worktrees/<sessionID>` with branch
+  `kiln/<slug>`; cleanup policy on archive.
 - Diff rendering in TUI with syntax highlighting and intra-line changes.
 - Checkpoint before risky operations; one-command revert.
 - Commit workflow: `git_commit` builds message from staged diff, runs hooks,
@@ -799,8 +799,8 @@ interface PermissionPolicy {
 - Features: tool/resource/prompt discovery, namespacing, capability filtering,
   connection status, per-server enable/disable, timeouts, retries, health checks,
   OAuth 2.1 + PKCE with token refresh, header/env interpolation (`{env:VAR}`).
-- MCP server mode: `harness mcp serve` exposes built-in tools over stdio/HTTP so
-  other agents can use this harness as a tool provider.
+- MCP server mode: `kiln mcp serve` exposes built-in tools over stdio/HTTP so
+  other agents can use this kiln as a tool provider.
 - Trust: servers are untrusted by default; destructive tools require permission;
   server instructions are labeled and never override system rules.
 
@@ -840,7 +840,7 @@ interface Plugin {
 
 - Markdown files with YAML frontmatter: `name`, `description`, `when`, `tools`,
   `model`.
-- Discovery: `~/.harness/skills/`, `.harness/skills/`, plugin-provided.
+- Discovery: `~/.kiln/skills/`, `.kiln/skills/`, plugin-provided.
 - Only name+description injected by default; `skill_load` pulls the body on
   demand (context-efficient).
 - Skills can declare required binaries and fail with an actionable message.
@@ -857,8 +857,8 @@ interface Plugin {
 
 ### 16.4 Memory
 
-- Hierarchy: user `~/.harness/memory/*.md` → project `AGENTS.md` /
-  `HARNESS.md` → subdirectory overrides.
+- Hierarchy: user `~/.kiln/memory/*.md` → project `AGENTS.md` /
+  `KILN.md` → subdirectory overrides.
 - `memory_write` dedupes and appends with timestamps; `/memory` to view/edit.
 - Memory is capped (default 20k tokens) with LRU eviction.
 - Explicit "remember this" flow; no silent background writes to memory.
@@ -907,20 +907,20 @@ interface Plugin {
 ## 19. CLI specification
 
 ```
-harness [options] [prompt]          # TUI (default)
-harness run [options] [prompt]      # non-interactive
-harness exec [options] [prompt]     # alias for run, CI-friendly
-harness serve [options]             # daemon
-harness auth {login,logout,status}
-harness models {list,search,default}
-harness mcp {list,add,remove,auth,serve}
-harness plugins {list,install,remove}
-harness sessions {list,show,export,delete,compact}
-harness config {get,set,path,edit,schema}
-harness eval {run,report}
-harness doctor
-harness update {check,install}
-harness completion {bash,zsh,fish}
+kiln [options] [prompt]          # TUI (default)
+kiln run [options] [prompt]      # non-interactive
+kiln exec [options] [prompt]     # alias for run, CI-friendly
+kiln serve [options]             # daemon
+kiln auth {login,logout,status}
+kiln models {list,search,default}
+kiln mcp {list,add,remove,auth,serve}
+kiln plugins {list,install,remove}
+kiln sessions {list,show,export,delete,compact}
+kiln config {get,set,path,edit,schema}
+kiln eval {run,report}
+kiln doctor
+kiln update {check,install}
+kiln completion {bash,zsh,fish}
 ```
 
 Global flags:
@@ -955,7 +955,7 @@ Headless contract:
 ## 20. Server and API
 
 - Hono server; HTTP/1.1 + WebSocket; optional HTTPS; bearer token for remote.
-- Daemon lifecycle: `harness serve` starts or attaches; Unix socket on POSIX,
+- Daemon lifecycle: `kiln serve` starts or attaches; Unix socket on POSIX,
   named pipe on Windows; PID + health file; `service status|restart|stop`.
 - OpenAPI 3.1 generated from Zod; `/openapi.json`; interactive docs at `/docs`.
 - Core endpoints:
@@ -997,22 +997,22 @@ WS     /ws                            # bidirectional events + input
 ## 21. SDK
 
 ```ts
-import { createHarness } from "@harness/sdk";
+import { createKiln } from "@kiln/sdk";
 
-const harness = createHarness({
+const kiln = createKiln({
   cwd: process.cwd(),
   model: "anthropic/claude-sonnet-4-5",
   permissionMode: "acceptEdits",
 });
 
-const session = await harness.session.create();
+const session = await kiln.session.create();
 for await (const event of session.prompt("Fix the failing test")) {
   if (event.type === "message.part.updated") render(event.part);
 }
 ```
 
 - Embeds the core in-process (no socket), reuses plugin/tool/MCP registries.
-- Exposes `Harness`, `Session`, `ToolRegistry`, `PermissionPolicy`,
+- Exposes `Kiln`, `Session`, `ToolRegistry`, `PermissionPolicy`,
   `ProviderRegistry`, `EventStream`.
 - Framework-agnostic; works in Node, Bun, Electron main, edge runtimes with
   documented limits (no shell sandbox).
@@ -1022,15 +1022,15 @@ for await (const event of session.prompt("Fix the failing test")) {
 
 ## 22. Configuration
 
-Precedence (low → high): defaults → user `~/.harness/config.json` → project
-`.harness/config.json` → `.harness/config.local.json` → env (`HARNESS_*`) → CLI
+Precedence (low → high): defaults → user `~/.kiln/config.json` → project
+`.kiln/config.json` → `.kiln/config.local.json` → env (`KILN_*`) → CLI
 flags.
 
 Schema highlights:
 
 ```json
 {
-  "$schema": "https://harness.dev/config.schema.json",
+  "$schema": "https://kiln.dev/config.schema.json",
   "model": "anthropic/claude-sonnet-4-5",
   "small_model": "anthropic/claude-haiku-4-5",
   "agent": "build",
@@ -1051,8 +1051,8 @@ Schema highlights:
 - Validated with Zod; published JSON Schema; editor autocomplete.
 - Hot reload via `fs.watch` (debounced); invalid config logs and keeps last good.
 - Secrets use `{env:VAR}` interpolation; never written to config in plaintext.
-- `harness config edit` opens `$EDITOR`; `config schema` prints the schema.
-- Project-local CLI preferences live in `.harness/cli.json`.
+- `kiln config edit` opens `$EDITOR`; `config schema` prints the schema.
+- Project-local CLI preferences live in `.kiln/cli.json`.
 
 ---
 
@@ -1063,16 +1063,16 @@ Schema highlights:
 - OpenTelemetry: spans for turn → provider call → tool execution; metrics for
   latency, tokens, cost, errors; optional OTLP exporter.
 - Session replay: `--replay <id>` re-emits events to a file for debugging.
-- Cost dashboard: `/cost`, `harness sessions show --cost`, JSON export.
+- Cost dashboard: `/cost`, `kiln sessions show --cost`, JSON export.
 - Telemetry opt-in, anonymous, PII-free; explicit consent screen on first run;
-  `HARNESS_TELEMETRY=0` disables.
-- Crash reporting opt-in with redaction; `harness doctor` collects diagnostics.
+  `KILN_TELEMETRY=0` disables.
+- Crash reporting opt-in with redaction; `kiln doctor` collects diagnostics.
 
 ---
 
-## 24. Evaluation harness
+## 24. Evaluation kiln
 
-Even an agent harness needs its own regression tests.
+Even an agent kiln needs its own regression tests.
 
 - **Golden transcripts:** fixture prompts + mocked provider streams → expected
   event sequences/tool calls; snapshot-tested.
@@ -1104,7 +1104,7 @@ Even an agent harness needs its own regression tests.
 | TUI         | ink-testing-library + snapshots    | Rendering, keybindings, streaming                             |
 | API         | Hono test client                   | Routes, auth, SSE, WS                                         |
 | E2E         | Playwright (web) + CLI scripts     | User flows                                                    |
-| Eval        | `@harness/eval`                    | Trajectory quality                                            |
+| Eval        | `@kiln/eval`                       | Trajectory quality                                            |
 
 Quality gates: 100% type-check, lint clean, unit ≥ 85% lines on core, all P0
 paths covered, no flaky tests (retry budget 0 in CI), mutation testing on the
@@ -1121,10 +1121,10 @@ policy engine and patch parser.
 - Release: changesets → version bump → build binaries → npm publish → Homebrew
   formula → Docker image → GitHub release notes.
 - Distribution:
-  - `npm i -g harness` / `npx harness`
+  - `npm i -g kiln` / `npx kiln`
   - standalone binaries (Linux x64/arm64, macOS x64/arm64, Windows x64)
-  - `docker run -it --rm -v $PWD:/work harness`
-  - `brew install harness`
+  - `docker run -it --rm -v $PWD:/work kiln`
+  - `brew install kiln`
 - Update mechanism: version check (cached 24h), signed manifest, rollback.
 - Branching: `main` protected; conventional commits; trunk-based; release tags
   `vX.Y.Z`.
@@ -1144,7 +1144,7 @@ policy engine and patch parser.
 - Example plugins, MCP servers, SDK embeds under `examples/`.
 - Contributing guide, code of conduct, security policy, issue templates.
 - Changelog generated from changesets; migration guides for breaking changes.
-- `harness doctor` for environment diagnostics; `harness --explain <error>` for
+- `kiln doctor` for environment diagnostics; `kiln --explain <error>` for
   actionable hints.
 
 ---
@@ -1156,8 +1156,8 @@ Durations are estimates for one senior engineer; adjust for team size.
 ### M0 — Foundation (Week 1)
 
 - Monorepo, tsconfig, Biome, Vitest, CI skeleton, changesets.
-- `@harness/shared` schemas/events/errors; JSON Schema generation.
-- `harness --version`, `doctor` stub, structured logging.
+- `@kiln/shared` schemas/events/errors; JSON Schema generation.
+- `kiln --version`, `doctor` stub, structured logging.
 - **Acceptance:** `pnpm build && pnpm test && pnpm lint` green in CI.
 
 ### M1 — Agent core (Weeks 2–3)
@@ -1165,7 +1165,7 @@ Durations are estimates for one senior engineer; adjust for team size.
 - Provider registry + Anthropic/OpenAI/Gemini/Ollama adapters.
 - Agent loop, streaming, tool registry, permission engine.
 - Tools: read, write, edit, glob, grep, ls, bash, todo.
-- CLI `harness run` + `--print` + JSON output; config loading.
+- CLI `kiln run` + `--print` + JSON output; config loading.
 - **Acceptance:** non-interactive agent edits a file, runs tests, and reports
   results on a fixture repo with mocked + real provider.
 
@@ -1205,8 +1205,8 @@ Durations are estimates for one senior engineer; adjust for team size.
 ### M6 — Server, SDK, ecosystem (Weeks 11–12)
 
 - Daemon, HTTP/WS API, OpenAPI, auth, remote access.
-- `@harness/sdk` embed + examples.
-- `@harness/plugin-sdk` published; plugin registry docs.
+- `@kiln/sdk` embed + examples.
+- `@kiln/plugin-sdk` published; plugin registry docs.
 - Optional web client (P2) behind a flag.
 - **Acceptance:** TUI connects to daemon over WS; SDK app drives a session;
   API passes contract tests; remote access requires auth.
@@ -1231,10 +1231,10 @@ Durations are estimates for one senior engineer; adjust for team size.
 - [ ] Biome config + pre-commit hook (lefthook)
 - [ ] Vitest + coverage thresholds
 - [ ] Changesets + release workflow
-- [ ] `@harness/shared`: events, schemas, errors, ids
+- [ ] `@kiln/shared`: events, schemas, errors, ids
 - [ ] JSON Schema generation script
 - [ ] Structured logging + OTel bootstrap
-- [ ] `harness --version`, `--help`, `doctor`
+- [ ] `kiln --version`, `--help`, `doctor`
 
 ### Core
 
@@ -1437,7 +1437,7 @@ Release gate:
 
 ## 34. Open decisions
 
-1. **Name/branding:** `harness` is a placeholder; confirm before package publish.
+1. **Name/branding:** `kiln` is a placeholder; confirm before package publish.
 2. **Provider abstraction:** hand-rolled HTTP/SSE adapters were selected over the
    Vercel AI SDK for exact control over tool-call streaming, retries, and cost.
    Revisit if provider coverage grows beyond the current set.

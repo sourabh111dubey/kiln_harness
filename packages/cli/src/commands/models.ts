@@ -1,5 +1,5 @@
-import { createDefaultProviderRegistry, listKnownModels } from "@harness/core";
-import { loadConfig } from "@harness/shared";
+import { createDefaultProviderRegistry, listKnownModels } from "@kiln/core";
+import { loadConfig } from "@kiln/shared";
 import type { Command } from "commander";
 
 export function registerModelsCommand(program: Command): void {

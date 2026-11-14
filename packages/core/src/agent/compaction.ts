@@ -1,4 +1,4 @@
-import type { ChatMessage } from "@harness/shared";
+import type { ChatMessage } from "@kiln/shared";
 
 export interface CompactionOptions {
   contextWindow: number;

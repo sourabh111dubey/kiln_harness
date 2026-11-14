@@ -6,7 +6,7 @@ import {
   type ProviderAdapter,
   type ProviderCapabilities,
   type StreamEvent,
-} from "@harness/shared";
+} from "@kiln/shared";
 import { afterEach, describe, expect, it } from "vitest";
 import { Agent } from "../src/agent/agent";
 import { PermissionEngine } from "../src/permissions/engine";
@@ -19,7 +19,7 @@ const directories: string[] = [];
 const stores: SessionStore[] = [];
 
 async function tempDir(): Promise<string> {
-  const directory = await mkdtemp(join(tmpdir(), "harness-persist-"));
+  const directory = await mkdtemp(join(tmpdir(), "kiln-persist-"));
   directories.push(directory);
   return directory;
 }

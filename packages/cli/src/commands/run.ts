@@ -1,4 +1,4 @@
-import { type PermissionMode, toHarnessError } from "@harness/shared";
+import { type PermissionMode, toKilnError } from "@kiln/shared";
 import type { Command } from "commander";
 import { runPrompt } from "../run-prompt";
 
@@ -58,10 +58,10 @@ export function registerRunCommand(program: Command): void {
         process.stdout.write(`${result.text}\n`);
       }
     } catch (error) {
-      const harnessError = toHarnessError(error);
-      process.stderr.write(`harness: ${harnessError.message}\n`);
-      if (harnessError.hint) {
-        process.stderr.write(`hint: ${harnessError.hint}\n`);
+      const kilnError = toKilnError(error);
+      process.stderr.write(`kiln: ${kilnError.message}\n`);
+      if (kilnError.hint) {
+        process.stderr.write(`hint: ${kilnError.hint}\n`);
       }
       process.exitCode = 1;
     }

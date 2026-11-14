@@ -8,7 +8,7 @@ import { formatDoctor, runDoctor } from "../src/commands/doctor";
 const temporaryDirectories: string[] = [];
 
 async function makeTempDir(): Promise<string> {
-  const directory = await mkdtemp(join(tmpdir(), "harness-doctor-"));
+  const directory = await mkdtemp(join(tmpdir(), "kiln-doctor-"));
   temporaryDirectories.push(directory);
   return directory;
 }

@@ -1,4 +1,4 @@
-import type { ToolDefinition } from "@harness/shared";
+import type { ToolDefinition } from "@kiln/shared";
 import { z } from "zod";
 import type { Todo } from "../tools/todo";
 
@@ -24,7 +24,7 @@ export function buildSystemPrompt(options: PromptOptions): string {
           .join("\n")}\n`
       : "";
 
-  return `You are harness, an expert coding agent working in a local repository.
+  return `You are Kiln, an expert coding agent working in a local repository.
 
 Environment:
 - Working directory: ${options.cwd}

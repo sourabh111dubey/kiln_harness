@@ -1,5 +1,5 @@
 {
-  "name": "@harness/shared",
+  "name": "@kiln/shared",
   "version": "1.0.0",
   "private": false,
   "type": "module",

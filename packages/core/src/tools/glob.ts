@@ -1,5 +1,5 @@
 import { isAbsolute, resolve } from "node:path";
-import type { ToolDefinition } from "@harness/shared";
+import type { ToolDefinition } from "@kiln/shared";
 import { glob } from "tinyglobby";
 import { z } from "zod";
 import {

@@ -1,4 +1,4 @@
-import type { ProviderAdapter } from "@harness/shared";
+import type { ProviderAdapter } from "@kiln/shared";
 import { AnthropicProvider } from "./anthropic";
 import { GeminiProvider } from "./gemini";
 import { OpenAIProvider } from "./openai";
@@ -80,12 +80,12 @@ export function createDefaultProviderRegistry(
     }),
   );
 
-  if (env.HARNESS_CUSTOM_BASE_URL) {
+  if (env.KILN_CUSTOM_BASE_URL) {
     registry.register(
       new OpenAIProvider({
         id: "custom",
-        apiKey: env.HARNESS_CUSTOM_API_KEY,
-        baseURL: env.HARNESS_CUSTOM_BASE_URL,
+        apiKey: env.KILN_CUSTOM_API_KEY,
+        baseURL: env.KILN_CUSTOM_BASE_URL,
       }),
     );
   }
@@ -99,6 +99,6 @@ export function availableProviderIds(env: NodeJS.ProcessEnv = process.env): stri
   if (env.OPENAI_API_KEY) ids.push("openai");
   if (env.OPENROUTER_API_KEY) ids.push("openrouter");
   if (env.GEMINI_API_KEY ?? env.GOOGLE_API_KEY) ids.push("gemini");
-  if (env.HARNESS_CUSTOM_BASE_URL) ids.push("custom");
+  if (env.KILN_CUSTOM_BASE_URL) ids.push("custom");
   return ids;
 }

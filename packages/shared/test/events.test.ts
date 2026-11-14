@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { harnessEventSchema } from "../src/events";
+import { kilnEventSchema } from "../src/events";
 import { ids } from "../src/ids";
 import { sessionSchema } from "../src/schemas";
 
@@ -24,13 +24,13 @@ describe("events", () => {
   it("round-trips a session.created event", () => {
     const session = makeSession();
     const event = { type: "session.created" as const, session };
-    const parsed = harnessEventSchema.parse(event);
+    const parsed = kilnEventSchema.parse(event);
     expect(parsed).toEqual(event);
     expect(sessionSchema.parse(session).id).toBe(session.id);
   });
 
   it("accepts a partial session.updated patch", () => {
-    const parsed = harnessEventSchema.parse({
+    const parsed = kilnEventSchema.parse({
       type: "session.updated",
       patch: { title: "Renamed" },
     });
@@ -38,12 +38,10 @@ describe("events", () => {
   });
 
   it("rejects unknown event types", () => {
-    expect(() => harnessEventSchema.parse({ type: "nope" })).toThrow();
+    expect(() => kilnEventSchema.parse({ type: "nope" })).toThrow();
   });
 
   it("rejects malformed ids", () => {
-    expect(() =>
-      harnessEventSchema.parse({ type: "session.archived", sessionID: "bad" }),
-    ).toThrow();
+    expect(() => kilnEventSchema.parse({ type: "session.archived", sessionID: "bad" })).toThrow();
   });
 });

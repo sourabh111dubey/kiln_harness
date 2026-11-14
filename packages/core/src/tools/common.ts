@@ -1,7 +1,7 @@
 import { type Dirent, existsSync } from "node:fs";
 import { mkdir, readdir, readFile, realpath, rename, rm, stat, writeFile } from "node:fs/promises";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
-import { HarnessError, type ToolOutput, toHarnessError } from "@harness/shared";
+import { KilnError, type ToolOutput, toKilnError } from "@kiln/shared";
 import { createTwoFilesPatch } from "diff";
 
 export const DEFAULT_IGNORE = new Set([
@@ -11,7 +11,7 @@ export const DEFAULT_IGNORE = new Set([
   "build",
   "coverage",
   ".turbo",
-  ".harness",
+  ".kiln",
   ".next",
   ".nuxt",
   "target",
@@ -27,7 +27,7 @@ export const GLOB_IGNORE = [
   "**/build/**",
   "**/coverage/**",
   "**/.turbo/**",
-  "**/.harness/**",
+  "**/.kiln/**",
   "**/.next/**",
   "**/target/**",
   "**/vendor/**",
@@ -46,7 +46,7 @@ export function isPathInside(cwd: string, target: string): boolean {
 
 export function assertInsideWorkspace(cwd: string, target: string): void {
   if (!isPathInside(cwd, target)) {
-    throw new HarnessError("permission_denied", `Path ${target} is outside the workspace ${cwd}`, {
+    throw new KilnError("permission_denied", `Path ${target} is outside the workspace ${cwd}`, {
       details: { cwd, target },
       recoverable: false,
     });
@@ -66,7 +66,7 @@ export async function assertRealInside(cwd: string, target: string): Promise<voi
   }
 
   if (!isPathInside(realCwd, realTarget)) {
-    throw new HarnessError(
+    throw new KilnError(
       "permission_denied",
       `Path ${target} resolves outside the workspace ${cwd}`,
       { details: { cwd, target, realTarget }, recoverable: false },
@@ -83,14 +83,14 @@ export async function readTextFile(path: string, maxBytes = 2_000_000): Promise<
   try {
     info = await stat(path);
   } catch (error) {
-    throw toHarnessError(error, "io_error");
+    throw toKilnError(error, "io_error");
   }
 
   if (!info.isFile()) {
-    throw new HarnessError("io_error", `Not a file: ${path}`);
+    throw new KilnError("io_error", `Not a file: ${path}`);
   }
   if (info.size > maxBytes) {
-    throw new HarnessError("io_error", `File is too large: ${path} (${info.size} bytes)`, {
+    throw new KilnError("io_error", `File is too large: ${path} (${info.size} bytes)`, {
       details: { path, size: info.size, maxBytes },
     });
   }
@@ -99,11 +99,11 @@ export async function readTextFile(path: string, maxBytes = 2_000_000): Promise<
   try {
     buffer = await readFile(path);
   } catch (error) {
-    throw toHarnessError(error, "io_error");
+    throw toKilnError(error, "io_error");
   }
 
   if (isBinary(buffer)) {
-    throw new HarnessError("io_error", `File appears to be binary: ${path}`);
+    throw new KilnError("io_error", `File appears to be binary: ${path}`);
   }
   return buffer.toString("utf8");
 }
@@ -132,7 +132,7 @@ export function diffText(path: string, before: string, after: string): string {
 
 export async function atomicWrite(path: string, content: string): Promise<void> {
   await mkdir(dirname(path), { recursive: true });
-  const temporary = `${path}.harness-tmp-${process.pid}-${Date.now()}`;
+  const temporary = `${path}.kiln-tmp-${process.pid}-${Date.now()}`;
   await writeFile(temporary, content, "utf8");
   try {
     await rename(temporary, path);
@@ -141,7 +141,7 @@ export async function atomicWrite(path: string, content: string): Promise<void> 
       (error as NodeJS.ErrnoException).code === "EPERM" ||
       (error as NodeJS.ErrnoException).code === "EEXIST"
     ) {
-      const backup = `${path}.harness-bak-${process.pid}-${Date.now()}`;
+      const backup = `${path}.kiln-bak-${process.pid}-${Date.now()}`;
       if (existsSync(path)) await rename(path, backup);
       try {
         await rename(temporary, path);

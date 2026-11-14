@@ -10,5 +10,5 @@ export default defineConfig({
   clean: true,
   splitting: false,
   treeshake: true,
-  external: ["@harness/core", "@harness/shared", "@hono/node-server", "hono", "zod"],
+  external: ["@kiln/core", "@kiln/shared", "@hono/node-server", "hono", "zod"],
 });

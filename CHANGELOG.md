@@ -24,11 +24,11 @@ semantic versioning.
 - **Server** — Hono HTTP/SSE daemon with session CRUD, prompt streaming, event
   replay, abort, compact, permission-resume flow, OpenAPI, optional bearer auth,
   and a minimal browser page.
-- **SDK** — `@harness/sdk` in-process embedding with sessions and streaming events.
-- **Plugins** — `@harness/plugin-sdk`, loader, and hooks for session start,
+- **SDK** — `@kiln/sdk` in-process embedding with sessions and streaming events.
+- **Plugins** — `@kiln/plugin-sdk`, loader, and hooks for session start,
   messages, tool before/after, and events.
 - **MCP** — client for stdio and Streamable HTTP, tool discovery/namespacing, and
-  an MCP stdio server exposing harness tools.
+  an MCP stdio server exposing kiln tools.
 - **Tooling** — pnpm/Turbo monorepo, Biome, Vitest, changesets, fuzz tests,
   performance budgets, cross-platform CI, CodeQL, SBOM, Docker image, and release
   automation.

@@ -1,6 +1,6 @@
 import { homedir, tmpdir } from "node:os";
 import { isAbsolute, parse, relative, resolve } from "node:path";
-import { HarnessError, type SandboxAdapter, type SandboxCommand } from "@harness/shared";
+import { KilnError, type SandboxAdapter, type SandboxCommand } from "@kiln/shared";
 
 export interface SandboxOptions {
   workspace: string;
@@ -92,7 +92,7 @@ export class MacSeatbeltSandbox implements SandboxAdapter {
         "/bin/bash",
         "-c",
         'cd "$1" && exec /bin/bash -c "$2"',
-        "harness",
+        "kiln",
         options.cwd ?? this.options.workspace,
         command,
       ],
@@ -125,7 +125,7 @@ export class DockerSandbox implements SandboxAdapter {
   wrap(command: string, options: { cwd?: string } = {}): SandboxCommand {
     const relativeCwd = options.cwd ? relative(this.options.workspace, options.cwd) : "";
     if (relativeCwd.startsWith("..") || isAbsolute(relativeCwd)) {
-      throw new HarnessError(
+      throw new KilnError(
         "permission_denied",
         `Docker sandbox cwd ${options.cwd} is outside ${this.options.workspace}`,
       );
@@ -166,7 +166,7 @@ export class DockerSandbox implements SandboxAdapter {
 export function createSandbox(options: SandboxOptions): SandboxAdapter {
   const resolved = resolve(options.workspace);
   if (resolved === homedir() || resolved === tmpdir() || parse(resolved).root === resolved) {
-    throw new HarnessError(
+    throw new KilnError(
       "invalid_argument",
       `Refusing to sandbox filesystem root/home/tmp: ${options.workspace}`,
     );

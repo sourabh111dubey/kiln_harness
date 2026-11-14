@@ -5,7 +5,7 @@ import {
   type ProviderAdapter,
   type ProviderCapabilities,
   type StreamEvent,
-} from "@harness/shared";
+} from "@kiln/shared";
 import { afterEach, describe, expect, it } from "vitest";
 import { Agent, type AgentEvent } from "../src/agent/agent";
 import { PermissionEngine } from "../src/permissions/engine";
@@ -15,7 +15,7 @@ import { makeTempDir, removeTempDir } from "./helpers";
 const directories: string[] = [];
 
 async function tempDir(): Promise<string> {
-  const directory = await makeTempDir("harness-agent-");
+  const directory = await makeTempDir("kiln-agent-");
   directories.push(directory);
   return directory;
 }

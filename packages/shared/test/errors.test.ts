@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { errors, HarnessError, isHarnessError, toHarnessError } from "../src/errors";
+import { errors, isKilnError, KilnError, toKilnError } from "../src/errors";
 
 describe("errors", () => {
   it("carries code, details, and hint", () => {
-    const error = new HarnessError("invalid_argument", "bad value", {
+    const error = new KilnError("invalid_argument", "bad value", {
       details: { field: "model" },
       hint: "Pass a model id.",
     });
@@ -13,22 +13,22 @@ describe("errors", () => {
     expect(error.toJSON()).toMatchObject({ code: "invalid_argument", message: "bad value" });
   });
 
-  it("preserves an existing harness error", () => {
-    const original = new HarnessError("aborted", "cancelled");
-    expect(toHarnessError(original)).toBe(original);
-    expect(isHarnessError(original)).toBe(true);
+  it("preserves an existing kiln error", () => {
+    const original = new KilnError("aborted", "cancelled");
+    expect(toKilnError(original)).toBe(original);
+    expect(isKilnError(original)).toBe(true);
   });
 
   it("wraps native errors", () => {
     const cause = new Error("boom");
-    const wrapped = toHarnessError(cause, "tool_error");
+    const wrapped = toKilnError(cause, "tool_error");
     expect(wrapped.code).toBe("tool_error");
     expect(wrapped.message).toBe("boom");
     expect(wrapped.cause).toBe(cause);
   });
 
   it("wraps non-error values", () => {
-    const wrapped = toHarnessError("nope");
+    const wrapped = toKilnError("nope");
     expect(wrapped.code).toBe("internal_error");
     expect(wrapped.message).toBe("nope");
   });

@@ -1,5 +1,5 @@
 {
-  "name": "@harness/plugin-sdk",
+  "name": "@kiln/plugin-sdk",
   "version": "1.0.0",
   "private": false,
   "type": "module",
@@ -21,7 +21,7 @@
     "clean": "rm -rf dist .turbo coverage"
   },
   "dependencies": {
-    "@harness/shared": "workspace:*"
+    "@kiln/shared": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "26.6.6",

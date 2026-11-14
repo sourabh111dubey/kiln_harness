@@ -3,7 +3,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { type ParseError, parse } from "jsonc-parser";
 import { z } from "zod";
-import { HarnessError, toHarnessError } from "./errors";
+import { KilnError, toKilnError } from "./errors";
 import { permissionModeSchema, permissionRuleSchema } from "./permission";
 
 export const permissionPolicySchema = z
@@ -15,7 +15,7 @@ export const permissionPolicySchema = z
 
 export type PermissionPolicy = z.infer<typeof permissionPolicySchema>;
 
-export const harnessConfigSchema = z
+export const kilnConfigSchema = z
   .object({
     $schema: z.string().optional(),
     model: z.string().optional(),
@@ -60,11 +60,11 @@ export const harnessConfigSchema = z
   })
   .strict();
 
-export type HarnessConfig = z.infer<typeof harnessConfigSchema>;
+export type KilnConfig = z.infer<typeof kilnConfigSchema>;
 
-export const defaultConfig: HarnessConfig = harnessConfigSchema.parse({});
+export const defaultConfig: KilnConfig = kilnConfigSchema.parse({});
 
-export const configJsonSchema = z.toJSONSchema(harnessConfigSchema, {
+export const configJsonSchema = z.toJSONSchema(kilnConfigSchema, {
   target: "draft-2020-12",
 }) as Record<string, unknown>;
 
@@ -111,13 +111,13 @@ export function mergeConfigs(...sources: unknown[]): unknown {
 }
 
 export function resolveGlobalConfigPath(env: NodeJS.ProcessEnv = process.env): string {
-  return env.HARNESS_CONFIG_DIR
-    ? join(env.HARNESS_CONFIG_DIR, "config.json")
-    : join(homedir(), ".harness", "config.json");
+  return env.KILN_CONFIG_DIR
+    ? join(env.KILN_CONFIG_DIR, "config.json")
+    : join(homedir(), ".kiln", "config.json");
 }
 
 export function resolveProjectConfigPath(cwd: string): string {
-  return join(cwd, ".harness", "config.json");
+  return join(cwd, ".kiln", "config.json");
 }
 
 async function readJsoncFile(path: string): Promise<unknown | undefined> {
@@ -126,7 +126,7 @@ async function readJsoncFile(path: string): Promise<unknown | undefined> {
     text = await readFile(path, "utf8");
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined;
-    throw toHarnessError(error, "io_error");
+    throw toKilnError(error, "io_error");
   }
 
   const parseErrors: ParseError[] = [];
@@ -137,7 +137,7 @@ async function readJsoncFile(path: string): Promise<unknown | undefined> {
 
   if (parseErrors.length > 0) {
     const first = parseErrors[0];
-    throw new HarnessError("invalid_config", `Invalid JSON in ${path}`, {
+    throw new KilnError("invalid_config", `Invalid JSON in ${path}`, {
       details: first
         ? {
             path,
@@ -156,22 +156,22 @@ async function readJsoncFile(path: string): Promise<unknown | undefined> {
 function envOverrides(env: NodeJS.ProcessEnv): Record<string, unknown> {
   const overrides: Record<string, unknown> = {};
 
-  if (env.HARNESS_MODEL) overrides.model = env.HARNESS_MODEL;
-  if (env.HARNESS_SMALL_MODEL) overrides.smallModel = env.HARNESS_SMALL_MODEL;
-  if (env.HARNESS_AGENT) overrides.agent = env.HARNESS_AGENT;
-  if (env.HARNESS_PERMISSION_MODE) {
-    overrides.permissions = { default: env.HARNESS_PERMISSION_MODE };
+  if (env.KILN_MODEL) overrides.model = env.KILN_MODEL;
+  if (env.KILN_SMALL_MODEL) overrides.smallModel = env.KILN_SMALL_MODEL;
+  if (env.KILN_AGENT) overrides.agent = env.KILN_AGENT;
+  if (env.KILN_PERMISSION_MODE) {
+    overrides.permissions = { default: env.KILN_PERMISSION_MODE };
   }
-  if (env.HARNESS_TELEMETRY) {
+  if (env.KILN_TELEMETRY) {
     overrides.telemetry = {
-      enabled: ["1", "true", "yes", "on"].includes(env.HARNESS_TELEMETRY.toLowerCase()),
+      enabled: ["1", "true", "yes", "on"].includes(env.KILN_TELEMETRY.toLowerCase()),
     };
   }
   return overrides;
 }
 
 export interface LoadedConfig {
-  config: HarnessConfig;
+  config: KilnConfig;
   path: string;
   sources: string[];
 }
@@ -197,12 +197,12 @@ export async function loadConfig(
 
   merged = deepMerge(merged, envOverrides(env));
 
-  const parsed = harnessConfigSchema.safeParse(merged);
+  const parsed = kilnConfigSchema.safeParse(merged);
   if (!parsed.success) {
     const issues = parsed.error.issues
       .map((issue) => `${issue.path.join(".") || "<root>"}: ${issue.message}`)
       .join("; ");
-    throw new HarnessError("invalid_config", `Invalid harness configuration: ${issues}`, {
+    throw new KilnError("invalid_config", `Invalid kiln configuration: ${issues}`, {
       details: { issues: parsed.error.issues },
       hint: `Check ${projectPath} and ${globalPath}.`,
     });

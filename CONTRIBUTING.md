@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping build Harness.
+Thanks for helping build Kiln.
 
 ## Setup
 

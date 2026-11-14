@@ -7,7 +7,7 @@ import { CheckpointManager } from "../src/session/checkpoint";
 const directories: string[] = [];
 
 async function tempDir(): Promise<string> {
-  const directory = await mkdtemp(join(tmpdir(), "harness-checkpoint-"));
+  const directory = await mkdtemp(join(tmpdir(), "kiln-checkpoint-"));
   directories.push(directory);
   return directory;
 }

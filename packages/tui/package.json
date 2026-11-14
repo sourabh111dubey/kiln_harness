@@ -1,5 +1,5 @@
 {
-  "name": "@harness/tui",
+  "name": "@kiln/tui",
   "version": "1.0.0",
   "private": false,
   "type": "module",
@@ -21,12 +21,12 @@
     "clean": "rm -rf dist .turbo coverage"
   },
   "dependencies": {
-    "@harness/core": "workspace:*",
-    "@harness/shared": "workspace:*",
+    "@kiln/core": "workspace:*",
+    "@kiln/shared": "workspace:*",
     "ink": "8.0.0",
     "react": "19.3.1",
-    "@harness/sandbox": "workspace:*",
-    "@harness/lsp": "workspace:*"
+    "@kiln/sandbox": "workspace:*",
+    "@kiln/lsp": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "26.6.6",

@@ -1,3 +1,3 @@
 export type { ServerOptions } from "./app";
-export { createHarnessApp, startServer } from "./app";
+export { createKilnApp, startServer } from "./app";
 export { attachWebSocket } from "./ws";

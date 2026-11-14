@@ -75,7 +75,7 @@ export const THEMES: Record<string, Theme> = {
 
 export function resolveTheme(env: NodeJS.ProcessEnv = process.env): Theme {
   if (env.NO_COLOR || env.TERM === "dumb") return THEMES.noColor ?? defaultTheme;
-  const name = env.HARNESS_THEME ?? "default";
+  const name = env.KILN_THEME ?? "default";
   return THEMES[name] ?? defaultTheme;
 }
 

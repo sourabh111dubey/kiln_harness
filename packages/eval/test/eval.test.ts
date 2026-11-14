@@ -14,7 +14,7 @@ import {
 const directories: string[] = [];
 
 async function tempDir(): Promise<string> {
-  const directory = await mkdtemp(join(tmpdir(), "harness-eval-"));
+  const directory = await mkdtemp(join(tmpdir(), "kiln-eval-"));
   directories.push(directory);
   return directory;
 }

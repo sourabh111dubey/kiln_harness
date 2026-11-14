@@ -1,10 +1,4 @@
-import type {
-  Plugin,
-  PluginCommand,
-  PluginContext,
-  PluginHooks,
-  PluginModule,
-} from "@harness/shared";
+import type { Plugin, PluginCommand, PluginContext, PluginHooks, PluginModule } from "@kiln/shared";
 
 export type { Plugin, PluginCommand, PluginContext, PluginHooks, PluginModule };
 

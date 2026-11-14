@@ -21,7 +21,7 @@ export const permissionRequestSchema = z.object({
 
 export type PermissionRequestRecord = z.infer<typeof permissionRequestSchema>;
 
-export const harnessEventSchema = z.discriminatedUnion("type", [
+export const kilnEventSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("session.created"),
     session: sessionSchema,
@@ -113,4 +113,4 @@ export const harnessEventSchema = z.discriminatedUnion("type", [
   }),
 ]);
 
-export type HarnessEvent = z.infer<typeof harnessEventSchema>;
+export type KilnEvent = z.infer<typeof kilnEventSchema>;

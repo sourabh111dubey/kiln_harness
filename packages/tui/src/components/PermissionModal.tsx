@@ -1,4 +1,4 @@
-import { summarizeInput } from "@harness/core";
+import { summarizeInput } from "@kiln/core";
 import { Box, Text, useInput } from "ink";
 import { color, type Theme } from "../theme";
 
